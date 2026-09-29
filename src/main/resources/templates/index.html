@@ -27,21 +27,26 @@
   <div class="alert error" th:if="${error}" th:text="${error}"></div>
 
   <!-- Solo el vocal logueado puede registrar; su grupo y nombre salen del login -->
-  <div class="actions" th:if="${vocal != null}" hx-target="#panel">
-    <button class="btn in" hx-get="/registro/ingreso">+ Ingreso</button>
-    <button class="btn out" hx-get="/registro/egreso">− Gasto / pago</button>
+  <div class="actions" th:if="${vocal != null}">
+    <button class="btn in" hx-get="/registro/ingreso" hx-target="#modal-body" onclick="abrirModal()">+ Ingreso</button>
+    <button class="btn out" hx-get="/registro/egreso" hx-target="#panel">− Gasto / pago</button>
   </div>
 
   <!-- Cada pestaña pide su pedazo de HTML y lo pone en #panel -->
   <nav class="tabs" id="tabs" hx-target="#panel">
-    <button class="active" hx-get="/resumen">Resumen</button>
-    <button hx-get="/movimientos?cancelados=true">Movimientos</button>
+    <button th:classappend="${activeTab == 'resumen'} ? 'active'" hx-get="/resumen">Resumen</button>
+    <button th:classappend="${activeTab == 'movimientos'} ? 'active'" hx-get="/movimientos?cancelados=true">Movimientos</button>
     <button hx-get="/ninos?grupo=A">Por niño</button>
   </nav>
 
-  <section id="panel" hx-get="/resumen" hx-trigger="load"></section>
+  <section id="panel" th:hx-get="${panelUrl}" hx-trigger="load"></section>
 
   <footer>Fondo de graduación</footer>
+</div>
+
+<!-- Modal para el formulario de ingreso -->
+<div id="modal" class="modal" onclick="if(event.target===this) cerrarModal()">
+  <div class="modal-content" id="modal-body"></div>
 </div>
 
 <!-- Barra fija de totales: visible en todas las pestañas, se refresca cada minuto -->
@@ -51,6 +56,13 @@
   document.querySelectorAll('#tabs button').forEach(b =>
     b.addEventListener('click', () =>
       document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('active', x === b))));
+
+  function abrirModal(){ document.getElementById('modal').classList.add('open'); }
+  function cerrarModal(){
+    document.getElementById('modal').classList.remove('open');
+    document.getElementById('modal-body').innerHTML = '';
+  }
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') cerrarModal(); });
 </script>
 </body>
 </html>

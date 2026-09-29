@@ -11,7 +11,11 @@
 </div>
 
 <div class="grid mt">
-  <div class="card" th:each="g : ${grupos}">
+  <div class="card card-link" th:each="g : ${grupos}"
+       th:hx-get="@{/movimientos(grupo=${g.grupoId}, cancelados=true)}"
+       hx-target="#panel"
+       th:attr="title=|Ver movimientos del ${g.nombre}|"
+       onclick="document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('active', x.textContent.trim() === 'Movimientos'));">
     <div class="row" style="padding:0 0 8px">
       <span class="pill" th:classappend="${'g-' + g.grupoId}" th:text="${g.nombre}">Grupo A</span>
       <span class="muted" th:text="|Vocal: ${g.vocal}|">Vocal</span>
@@ -22,6 +26,7 @@
       <span class="neg"><span th:replace="~{fragments :: money(${g.gastos})}"></span></span></div>
     <div class="row"><strong>Aporta al fondo</strong>
       <strong><span th:replace="~{fragments :: money(${g.total})}"></span></strong></div>
+    <div class="go">Ver movimientos →</div>
   </div>
 </div>
 

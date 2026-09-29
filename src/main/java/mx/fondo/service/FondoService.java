@@ -62,7 +62,7 @@ public class FondoService {
     }
 
     public List<Movimiento> movimientos(String tipo, String grupo, boolean incluirCancelados) {
-        String tipoValido = TIPOS.contains(tipo) ? tipo : null;
+        String tipoValido = (tipo != null && TIPOS.contains(tipo)) ? tipo : null;
         String grupoValido = (grupo == null || grupo.isBlank()) ? null : grupo;
         return repository.movimientos(tipoValido, grupoValido, incluirCancelados, null);
     }

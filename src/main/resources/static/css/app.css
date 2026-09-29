@@ -27,6 +27,12 @@ select,input{font:inherit;color:var(--text);background:var(--card);border:1px so
 .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
 .card h2{font-size:15px;margin:0 0 10px}
+.card-link{position:relative;cursor:pointer;transition:border-color .15s, box-shadow .15s, transform .1s}
+.card-link::after{content:"›";position:absolute;top:10px;right:14px;color:var(--muted);font-size:22px;line-height:1;transition:transform .15s, color .15s}
+.card-link:hover{border-color:var(--brand);box-shadow:0 4px 14px rgba(31,79,216,.12);transform:translateY(-1px)}
+.card-link:hover::after{color:var(--brand);transform:translateX(3px)}
+.card-link:active{transform:translateY(0)}
+.card-link .go{display:inline-flex;align-items:center;gap:4px;margin-top:8px;color:var(--brand);font-weight:600;font-size:13px}
 .hero .big{font-size:30px;font-weight:700;margin:2px 0 12px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .stat .k{font-size:12px;color:var(--muted)}
@@ -102,6 +108,12 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 .login{max-width:420px;padding-top:10vh}
 .login h1{margin-bottom:2px}
 .login .sub{margin-bottom:14px}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-start;justify-content:center;z-index:20;padding:60px 16px 16px;overflow-y:auto}
+.modal.open{display:flex;animation:modalIn .15s ease-out}
+.modal-content{width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.35);border-radius:14px}
+.modal-content .card{margin:0}
+@keyframes modalIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 
 footer{color:var(--muted);font-size:12px;margin:24px 0 8px;text-align:center}
 

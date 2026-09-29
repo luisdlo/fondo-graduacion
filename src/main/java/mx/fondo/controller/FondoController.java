@@ -38,10 +38,21 @@ public class FondoController {
     // ---------- Páginas ----------
 
     @GetMapping("/")
-    public String index(Principal principal, Model model) {
+    public String index(@RequestParam(required = false) String tab,
+                        @RequestParam(required = false) String grupo,
+                        Principal principal, Model model) {
         if (principal != null) {
             model.addAttribute("vocal", service.vocal(principal.getName()));
         }
+        String panelUrl = "/resumen";
+        String activeTab = "resumen";
+        if ("movimientos".equals(tab)) {
+            activeTab = "movimientos";
+            panelUrl = "/movimientos?cancelados=true"
+                    + (grupo != null && !grupo.isBlank() ? "&grupo=" + grupo : "");
+        }
+        model.addAttribute("panelUrl", panelUrl);
+        model.addAttribute("activeTab", activeTab);
         return "index";
     }
 
@@ -119,10 +130,11 @@ public class FondoController {
         try {
             service.registrarIngreso(principal.getName(), ninoId, monto);
             redirect.addFlashAttribute("ok", "Ingreso registrado.");
+            return "redirect:/?tab=movimientos&grupo=" + service.vocal(principal.getName()).grupoId();
         } catch (IllegalArgumentException | DataIntegrityViolationException e) {
             redirect.addFlashAttribute("error", mensaje(e));
+            return "redirect:/";
         }
-        return "redirect:/";
     }
 
     @GetMapping("/registro/egreso")
