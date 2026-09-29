@@ -1,0 +1,11 @@
+<!-- Barra fija de totales (pedazo que HTMX pone dentro de .totbar) -->
+<div class="totbar-in">
+  <div class="tot general">
+    <div class="k">Total general</div>
+    <div class="v"><span th:replace="~{fragments :: money(${general.totalGeneral})}"></span></div>
+  </div>
+  <div class="tot" th:each="g : ${grupos}">
+    <div class="k"><span class="dot" th:classappend="${'g-' + g.grupoId}"></span><span th:text="${g.nombre}">Grupo A</span></div>
+    <div class="v"><span th:replace="~{fragments :: money(${g.total})}"></span></div>
+  </div>
+</div>

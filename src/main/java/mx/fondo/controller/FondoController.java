@@ -1,0 +1,158 @@
+package mx.fondo.controller;
+
+import mx.fondo.model.Vocal;
+import mx.fondo.service.FondoService;
+import org.springframework.core.io.Resource;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.security.Principal;
+import java.time.LocalDate;
+
+/**
+ * "/" regresa la página completa; las pestañas y la barra de totales son pedazos de HTML que HTMX
+ * inserta en la página. Registrar pide login: el vocal (y su grupo) salen de la sesión.
+ */
+@Controller
+public class FondoController {
+
+    private final FondoService service;
+
+    public FondoController(FondoService service) {
+        this.service = service;
+    }
+
+    // ---------- Páginas ----------
+
+    @GetMapping("/")
+    public String index(Principal principal, Model model) {
+        if (principal != null) {
+            model.addAttribute("vocal", service.vocal(principal.getName()));
+        }
+        return "index";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
+
+    // ---------- Consulta (público) ----------
+
+    @GetMapping("/resumen")
+    public String resumen(Model model) {
+        model.addAttribute("grupos", service.totalesPorGrupo());
+        model.addAttribute("general", service.totalGeneral());
+        model.addAttribute("pagos", service.pagosGraduacion());
+        model.addAttribute("ultimos", service.ultimosMovimientos());
+        return "resumen";
+    }
+
+    @GetMapping("/movimientos")
+    public String movimientos(@RequestParam(required = false) String tipo,
+                              @RequestParam(required = false) String grupo,
+                              @RequestParam(defaultValue = "false") boolean cancelados,
+                              Model model) {
+        model.addAttribute("movimientos", service.movimientos(tipo, grupo, cancelados));
+        model.addAttribute("grupos", service.grupos());
+        model.addAttribute("tipo", tipo);
+        model.addAttribute("grupo", grupo);
+        model.addAttribute("cancelados", cancelados);
+        return "movimientos";
+    }
+
+    @GetMapping("/ninos")
+    public String ninos(@RequestParam(defaultValue = "A") String grupo, Model model) {
+        model.addAttribute("ninos", service.aportacionesPorNino(grupo));
+        model.addAttribute("grupos", service.grupos());
+        model.addAttribute("grupo", grupo);
+        return "ninos";
+    }
+
+    @GetMapping("/totales")
+    public String totales(Model model) {
+        model.addAttribute("grupos", service.totalesPorGrupo());
+        model.addAttribute("general", service.totalGeneral());
+        return "totales";
+    }
+
+    @GetMapping("/comprobantes/{nombre}")
+    public ResponseEntity<Resource> comprobante(@PathVariable String nombre) {
+        Resource archivo = service.comprobante(nombre);
+        if (archivo == null) {
+            return ResponseEntity.notFound().build();
+        }
+        MediaType tipo = MediaTypeFactory.getMediaType(archivo).orElse(MediaType.APPLICATION_OCTET_STREAM);
+        return ResponseEntity.ok().contentType(tipo).body(archivo);
+    }
+
+    // ---------- Registro (requiere login de vocal) ----------
+
+    @GetMapping("/registro/ingreso")
+    public String formIngreso(Principal principal, Model model) {
+        Vocal vocal = service.vocal(principal.getName());
+        model.addAttribute("vocal", vocal);
+        model.addAttribute("ninos", service.ninosDelGrupo(vocal.grupoId()));
+        model.addAttribute("montos", FondoService.MONTOS);
+        model.addAttribute("concepto", FondoService.CONCEPTO);
+        return "ingreso-form";
+    }
+
+    @PostMapping("/ingresos")
+    public String registrarIngreso(Principal principal,
+                                   @RequestParam(required = false) Integer ninoId,
+                                   @RequestParam BigDecimal monto,
+                                   RedirectAttributes redirect) {
+        try {
+            service.registrarIngreso(principal.getName(), ninoId, monto);
+            redirect.addFlashAttribute("ok", "Ingreso registrado.");
+        } catch (IllegalArgumentException | DataIntegrityViolationException e) {
+            redirect.addFlashAttribute("error", mensaje(e));
+        }
+        return "redirect:/";
+    }
+
+    @GetMapping("/registro/egreso")
+    public String formEgreso(Principal principal, Model model) {
+        model.addAttribute("vocal", service.vocal(principal.getName()));
+        model.addAttribute("hoy", LocalDate.now());
+        return "egreso-form";
+    }
+
+    @PostMapping("/egresos")
+    public String registrarEgreso(Principal principal,
+                                  @RequestParam(defaultValue = "grupo") String origen,
+                                  @RequestParam String concepto,
+                                  @RequestParam BigDecimal monto,
+                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+                                  @RequestParam(required = false) MultipartFile comprobante,
+                                  RedirectAttributes redirect) {
+        try {
+            service.registrarEgreso(principal.getName(), "COMUN".equals(origen), concepto, monto, fecha, comprobante);
+            redirect.addFlashAttribute("ok", comprobante == null || comprobante.isEmpty()
+                    ? "Gasto registrado sin comprobante." : "Gasto registrado.");
+        } catch (IllegalArgumentException | DataIntegrityViolationException | IOException e) {
+            redirect.addFlashAttribute("error", mensaje(e));
+        }
+        return "redirect:/";
+    }
+
+    private String mensaje(Exception e) {
+        return e instanceof IllegalArgumentException
+                ? e.getMessage()
+                : "No se pudo guardar, revisa los datos.";
+    }
+}

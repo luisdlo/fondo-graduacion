@@ -1,0 +1,25 @@
+<!-- Pestaña Movimientos (pedazo que HTMX pone en #panel) -->
+<div class="card">
+  <div class="list-head"><h2>Movimientos · Fondo de graduación</h2></div>
+
+  <!-- Cualquier cambio en los filtros vuelve a pedir este mismo pedazo -->
+  <form class="filters" hx-get="/movimientos" hx-target="#panel" hx-trigger="change">
+    <select name="tipo">
+      <option value="" th:selected="${tipo == null or tipo == ''}">Ingresos y gastos</option>
+      <option value="INGRESO" th:selected="${tipo == 'INGRESO'}">Solo ingresos</option>
+      <option value="EGRESO" th:selected="${tipo == 'EGRESO'}">Solo gastos</option>
+    </select>
+    <select name="grupo">
+      <option value="" th:selected="${grupo == null or grupo == ''}">Todos los grupos</option>
+      <option th:each="g : ${grupos}" th:value="${g.id}" th:text="${g.nombre}" th:selected="${grupo == g.id}">Grupo A</option>
+      <option value="COMUN" th:selected="${grupo == 'COMUN'}">Fondo común (graduación)</option>
+    </select>
+    <label class="check"><input type="checkbox" name="cancelados" value="true" th:checked="${cancelados}"> Mostrar cancelados</label>
+  </form>
+
+  <div class="meta" th:text="|${movimientos.size()} movimientos|">0 movimientos</div>
+  <ul class="movs">
+    <th:block th:each="m : ${movimientos}"><li th:replace="~{fragments :: mov(${m})}"></li></th:block>
+    <li class="muted" style="padding:12px 0" th:if="${movimientos.isEmpty()}">Sin movimientos con esos filtros.</li>
+  </ul>
+</div>

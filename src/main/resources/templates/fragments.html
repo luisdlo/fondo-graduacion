@@ -1,0 +1,28 @@
+<!-- Pedazos reutilizables -->
+
+<!-- Monto con formato $1,000 -->
+<span th:fragment="money(v)" th:text="${'$' + #numbers.formatDecimal(v, 1, 'COMMA', 0, 'POINT')}">$0</span>
+
+<!-- Un movimiento de la lista -->
+<li th:fragment="mov(m)" class="mov"
+    th:classappend="${(m.esIngreso() ? 'ingreso' : 'egreso') + (m.cancelado ? ' is-cancel' : '')}">
+  <span class="pill" th:classappend="${m.pillClass()}" th:text="${m.grupoEtiqueta()}">Grupo A</span>
+  <div class="mov-main">
+    <div class="mov-title" th:text="${m.concepto}">Fondo de graduación</div>
+    <div class="meta">
+      <span th:text="${#temporals.format(m.fecha, 'd MMM yyyy')}">1 sep 2026</span>
+      <span th:unless="${m.esIngreso()}"> · Fondo de graduación</span>
+      <span th:if="${m.nino != null}" th:text="|· Niño: ${m.nino}|"></span>
+      <span th:text="|· Registró: ${m.registradoPor}|"></span>
+    </div>
+    <div class="meta" th:unless="${m.esIngreso()}">
+      <a th:if="${m.comprobante != null}" th:href="@{/comprobantes/{n}(n=${m.comprobante})}" target="_blank" th:text="|📎 ${m.comprobante}|"></a>
+      <span th:if="${m.comprobante == null}" class="warn">Sin comprobante</span>
+    </div>
+    <div class="cancelado" th:if="${m.cancelado}"
+         th:text="|Cancelado por ${m.canceladoPor}: ${m.motivoCancelacion}|"></div>
+  </div>
+  <div class="mov-side">
+    <div class="monto"><span th:text="${m.esIngreso() ? '+' : '−'}">+</span><span th:replace="~{fragments :: money(${m.monto})}"></span></div>
+  </div>
+</li>

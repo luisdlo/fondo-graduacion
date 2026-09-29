@@ -1,0 +1,26 @@
+<!-- Formulario de gasto (pedazo que HTMX pone en #panel). Se envía normal y regresa a "/". -->
+<div class="card">
+  <h2>Registrar gasto o pago</h2>
+  <p class="meta" style="margin:-4px 0 12px" th:text="|Se registra a nombre de ${vocal.nombre}|"></p>
+
+  <form class="form" th:action="@{/egresos}" method="post" enctype="multipart/form-data">
+    <div class="field">¿De dónde sale el dinero?
+      <div class="radio">
+        <label><input type="radio" name="origen" value="grupo" checked> <span th:text="|Gasto del ${vocal.grupoNombre}|">Gasto del grupo</span></label>
+        <label><input type="radio" name="origen" value="COMUN"> Pago de la graduación (fondo común)</label>
+      </div>
+    </div>
+    <label class="field">Concepto<input name="concepto" required placeholder="Ej. Anticipo del salón, invitaciones, fotógrafo"></label>
+    <div class="grid2">
+      <label class="field">Monto<input name="monto" type="number" min="1" step="0.01" inputmode="decimal" required></label>
+      <label class="field">Fecha<input name="fecha" type="date" th:value="${hoy}" required></label>
+    </div>
+    <label class="field">Comprobante <span class="hint">(PDF o foto)</span>
+      <input type="file" name="comprobante" accept="image/*,application/pdf">
+    </label>
+    <div class="form-actions">
+      <button type="button" class="btn" hx-get="/resumen" hx-target="#panel">Cancelar</button>
+      <button class="btn primary">Guardar</button>
+    </div>
+  </form>
+</div>

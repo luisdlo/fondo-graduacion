@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · Fondo de Graduación</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="wrap login">
+  <div class="card">
+    <h1>Fondo de Graduación</h1>
+    <p class="sub">Entrada para vocales</p>
+
+    <div class="alert error" th:if="${param.error}">Usuario o contraseña incorrectos.</div>
+    <div class="alert ok" th:if="${param.logout}">Sesión cerrada.</div>
+
+    <form class="form" th:action="@{/login}" method="post">
+      <label class="field">Usuario<input name="username" autocomplete="username" required autofocus></label>
+      <label class="field">Contraseña<input name="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn primary">Entrar</button>
+    </form>
+    <p class="meta"><a th:href="@{/}">← Volver sin entrar</a></p>
+  </div>
+</div>
+</body>
+</html>

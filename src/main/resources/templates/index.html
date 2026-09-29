@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fondo de Graduación</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+  <script src="https://unpkg.com/htmx.org@2.0.3" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Fondo de Graduación</h1>
+      <p class="sub">Lo que juntan los tres grupos para la graduación y en qué se gasta, visible para todos.</p>
+    </div>
+
+    <!-- Sesión: si hay vocal logueado se muestra quién es; si no, el botón para entrar -->
+    <div class="user" th:if="${vocal != null}">
+      <span><strong th:text="${vocal.nombre}">Vocal</strong> · <span th:text="${vocal.grupoNombre}">Grupo</span></span>
+      <form th:action="@{/logout}" method="post"><button class="link">Salir</button></form>
+    </div>
+    <a class="btn" th:if="${vocal == null}" th:href="@{/login}">Entrar (vocales)</a>
+  </header>
+
+  <div class="alert ok" th:if="${ok}" th:text="${ok}"></div>
+  <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+  <!-- Solo el vocal logueado puede registrar; su grupo y nombre salen del login -->
+  <div class="actions" th:if="${vocal != null}" hx-target="#panel">
+    <button class="btn in" hx-get="/registro/ingreso">+ Ingreso</button>
+    <button class="btn out" hx-get="/registro/egreso">− Gasto / pago</button>
+  </div>
+
+  <!-- Cada pestaña pide su pedazo de HTML y lo pone en #panel -->
+  <nav class="tabs" id="tabs" hx-target="#panel">
+    <button class="active" hx-get="/resumen">Resumen</button>
+    <button hx-get="/movimientos?cancelados=true">Movimientos</button>
+    <button hx-get="/ninos?grupo=A">Por niño</button>
+  </nav>
+
+  <section id="panel" hx-get="/resumen" hx-trigger="load"></section>
+
+  <footer>Fondo de graduación</footer>
+</div>
+
+<!-- Barra fija de totales: visible en todas las pestañas, se refresca cada minuto -->
+<div class="totbar" hx-get="/totales" hx-trigger="load, every 60s"></div>
+
+<script>
+  document.querySelectorAll('#tabs button').forEach(b =>
+    b.addEventListener('click', () =>
+      document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('active', x === b))));
+</script>
+</body>
+</html>

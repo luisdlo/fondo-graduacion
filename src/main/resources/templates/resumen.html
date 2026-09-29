@@ -1,0 +1,42 @@
+<!-- Pestaña Resumen (pedazo que HTMX pone en #panel) -->
+<div class="card hero">
+  <h2>Fondo de graduación · disponible</h2>
+  <div class="big"><span th:replace="~{fragments :: money(${general.totalGeneral})}"></span></div>
+  <div class="stats">
+    <div class="stat"><div class="k">Total de los grupos</div>
+      <div class="v pos"><span th:replace="~{fragments :: money(${general.totalGrupos})}"></span></div></div>
+    <div class="stat"><div class="k">Pagos de la graduación</div>
+      <div class="v neg"><span th:replace="~{fragments :: money(${general.pagosGraduacion})}"></span></div></div>
+  </div>
+</div>
+
+<div class="grid mt">
+  <div class="card" th:each="g : ${grupos}">
+    <div class="row" style="padding:0 0 8px">
+      <span class="pill" th:classappend="${'g-' + g.grupoId}" th:text="${g.nombre}">Grupo A</span>
+      <span class="muted" th:text="|Vocal: ${g.vocal}|">Vocal</span>
+    </div>
+    <div class="row"><span class="muted">Ingresos</span>
+      <span class="pos"><span th:replace="~{fragments :: money(${g.ingresos})}"></span></span></div>
+    <div class="row"><span class="muted">Gastos del grupo</span>
+      <span class="neg"><span th:replace="~{fragments :: money(${g.gastos})}"></span></span></div>
+    <div class="row"><strong>Aporta al fondo</strong>
+      <strong><span th:replace="~{fragments :: money(${g.total})}"></span></strong></div>
+  </div>
+</div>
+
+<div class="grid mt">
+  <div class="card">
+    <h2>Pagos de la graduación</h2>
+    <ul class="movs" th:if="${!pagos.isEmpty()}">
+      <th:block th:each="m : ${pagos}"><li th:replace="~{fragments :: mov(${m})}"></li></th:block>
+    </ul>
+    <p class="muted" th:if="${pagos.isEmpty()}">Todavía no hay pagos.</p>
+  </div>
+  <div class="card">
+    <h2>Últimos movimientos · Fondo de graduación</h2>
+    <ul class="movs">
+      <th:block th:each="m : ${ultimos}"><li th:replace="~{fragments :: mov(${m})}"></li></th:block>
+    </ul>
+  </div>
+</div>

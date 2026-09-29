@@ -1,0 +1,24 @@
+<!-- Formulario de ingreso (pedazo que HTMX pone en #panel). Se envía normal y regresa a "/". -->
+<div class="card">
+  <h2>Registrar ingreso</h2>
+  <p class="meta" style="margin:-4px 0 12px" th:text="|Se registra en el ${vocal.grupoNombre} a nombre de ${vocal.nombre} · fecha de hoy|"></p>
+
+  <form class="form" th:action="@{/ingresos}" method="post">
+    <label class="field">Concepto<input th:value="${concepto}" readonly></label>
+    <label class="field">Niño <span class="hint">(opcional)</span>
+      <select name="ninoId">
+        <option value="">— Sin niño (ingreso general del grupo) —</option>
+        <option th:each="n : ${ninos}" th:value="${n.id}" th:text="${n.nombre}">Niño</option>
+      </select>
+    </label>
+    <label class="field">Monto
+      <select name="monto" required>
+        <option th:each="m : ${montos}" th:value="${m}" th:text="${'$' + #numbers.formatDecimal(m, 1, 'COMMA', 0, 'POINT')}">$500</option>
+      </select>
+    </label>
+    <div class="form-actions">
+      <button type="button" class="btn" hx-get="/resumen" hx-target="#panel">Cancelar</button>
+      <button class="btn primary">Guardar</button>
+    </div>
+  </form>
+</div>
