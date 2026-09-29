@@ -3,17 +3,15 @@
 <!-- Monto con formato $1,000 -->
 <span th:fragment="money(v)" th:text="${'$' + #numbers.formatDecimal(v, 1, 'COMMA', 0, 'POINT')}">$0</span>
 
-<!-- Un movimiento de la lista. Si el vocal puede cancelarlo, el <li> se vuelve clickable
-     y muestra un formulario inline con el motivo. -->
+<!-- Un movimiento de la lista. Si el vocal puede borrarlo, aparece la franja azul,
+     el badge "TUYO" y el botón rojo de Borrar que abre el modal de confirmación. -->
 <li th:fragment="mov(m, vocal)" class="mov"
-    th:with="puedeCancelar=${vocal != null and !m.cancelado
+    th:with="puedeBorrar=${vocal != null
               and ((m.grupoId != null and m.grupoId == vocal.grupoId)
                 or (m.grupoId == null and m.registradoPor == vocal.nombre))}"
     th:classappend="${(m.esIngreso() ? 'ingreso' : 'egreso')
               + (m.cancelado ? ' is-cancel' : '')
-              + (puedeCancelar ? ' mov-clickable' : '')}"
-    th:attr="data-cancelable=${puedeCancelar}"
-    onclick="if(this.dataset.cancelable==='true' &amp;&amp; !event.target.closest('a,button,input,form,label,textarea')) this.classList.toggle('open')">
+              + (puedeBorrar ? ' mov-mine' : '')}">
   <span class="pill" th:classappend="${m.pillClass()}" th:text="${m.grupoEtiqueta()}">Grupo A</span>
   <div class="mov-main">
     <div class="mov-title" th:text="${m.concepto}">Fondo de graduación</div>
@@ -32,18 +30,9 @@
   </div>
   <div class="mov-side">
     <div class="monto"><span th:text="${m.esIngreso() ? '+' : '−'}">+</span><span th:replace="~{fragments :: money(${m.monto})}"></span></div>
-  </div>
-
-  <!-- Formulario inline para cancelar (solo si el vocal es el dueño del movimiento) -->
-  <div class="mov-cancel" th:if="${puedeCancelar}">
-    <form th:action="@{/registro/cancelar/{id}(id=${m.id})}" method="post">
-      <label class="field">Motivo de la cancelación
-        <input name="motivo" required maxlength="255" placeholder="Ej. Se registró dos veces">
-      </label>
-      <div class="form-actions">
-        <button type="button" class="btn" onclick="this.closest('li').classList.remove('open')">Cerrar</button>
-        <button class="btn out">Cancelar movimiento</button>
-      </div>
-    </form>
+    <button type="button" th:if="${puedeBorrar}" class="btn-borrar"
+            th:attr="data-id=${m.id},
+                     data-desc=|${m.concepto} · $${#numbers.formatDecimal(m.monto, 1, 'COMMA', 0, 'POINT')}|"
+            onclick="abrirBorrar(this)">🗑 Borrar</button>
   </div>
 </li>

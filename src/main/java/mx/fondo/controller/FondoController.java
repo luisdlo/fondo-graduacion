@@ -169,14 +169,13 @@ public class FondoController {
         }
     }
 
-    @PostMapping("/registro/cancelar/{id}")
-    public String cancelarMovimiento(@PathVariable int id,
-                                     @RequestParam String motivo,
-                                     Principal principal,
-                                     RedirectAttributes redirect) {
+    @PostMapping("/registro/borrar/{id}")
+    public String borrarMovimiento(@PathVariable int id,
+                                   Principal principal,
+                                   RedirectAttributes redirect) {
         try {
-            String grupo = service.cancelarMovimiento(principal.getName(), id, motivo);
-            redirect.addFlashAttribute("ok", "Movimiento cancelado.");
+            String grupo = service.borrarMovimiento(principal.getName(), id);
+            redirect.addFlashAttribute("ok", "Movimiento borrado.");
             return "redirect:/?tab=movimientos&grupo=" + grupo;
         } catch (IllegalArgumentException | IllegalStateException e) {
             redirect.addFlashAttribute("error", e.getMessage());

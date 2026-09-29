@@ -122,11 +122,7 @@ public class FondoRepository {
                 .stream().findFirst();
     }
 
-    public void cancelar(int id, String motivo, String canceladoPor) {
-        jdbc.update("""
-                UPDATE movimiento
-                   SET cancelado = TRUE, motivo_cancelacion = ?, cancelado_por = ?
-                 WHERE id = ? AND cancelado = FALSE
-                """, motivo, canceladoPor, id);
+    public void borrar(int id) {
+        jdbc.update("DELETE FROM movimiento WHERE id = ?", id);
     }
 }

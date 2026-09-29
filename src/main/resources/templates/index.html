@@ -49,6 +49,23 @@
   <div class="modal-content" id="modal-body"></div>
 </div>
 
+<!-- Modal de confirmación para borrar movimientos (Thymeleaf inserta el token CSRF en el form) -->
+<div id="modal-borrar" class="modal" th:if="${vocal != null}" onclick="if(event.target===this) cerrarBorrar()">
+  <div class="modal-content">
+    <div class="card">
+      <h2>¿Borrar este movimiento?</h2>
+      <p class="meta" style="margin:-4px 0 12px">Se eliminará de la base de datos y no se puede recuperar.</p>
+      <div id="borrar-desc" class="borrar-desc"></div>
+      <form id="borrar-form" th:action="@{/registro/borrar/0}" method="post">
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="cerrarBorrar()">Cancelar</button>
+          <button class="btn out">Sí, borrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Barra fija de totales: visible en todas las pestañas, se refresca cada minuto -->
 <div class="totbar" hx-get="/totales" hx-trigger="load, every 60s"></div>
 
@@ -62,7 +79,13 @@
     document.getElementById('modal').classList.remove('open');
     document.getElementById('modal-body').innerHTML = '';
   }
-  document.addEventListener('keydown', e => { if(e.key === 'Escape') cerrarModal(); });
+  function abrirBorrar(btn){
+    document.getElementById('borrar-desc').textContent = btn.dataset.desc;
+    document.getElementById('borrar-form').action = '/registro/borrar/' + btn.dataset.id;
+    document.getElementById('modal-borrar').classList.add('open');
+  }
+  function cerrarBorrar(){ document.getElementById('modal-borrar').classList.remove('open'); }
+  document.addEventListener('keydown', e => { if(e.key === 'Escape'){ cerrarModal(); cerrarBorrar(); } });
 </script>
 </body>
 </html>

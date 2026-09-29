@@ -108,28 +108,21 @@ public class FondoService {
     }
 
     /**
-     * Cancela un movimiento (nunca se borra: queda tachado con motivo y quién).
-     * Solo el vocal del grupo puede cancelar sus movimientos; en fondo común solo quien lo registró.
-     * Regresa el grupo (A/B/C o COMUN) para redirigir con el filtro correcto.
+     * Borra un movimiento (DELETE en la BD). Solo el vocal del grupo puede borrar sus movimientos;
+     * en fondo común solo quien lo registró. Regresa el grupo (A/B/C o COMUN) para el filtro.
      */
-    public String cancelarMovimiento(String usuario, int id, String motivo) {
-        if (motivo == null || motivo.isBlank()) {
-            throw new IllegalArgumentException("Escribe el motivo de la cancelación.");
-        }
+    public String borrarMovimiento(String usuario, int id) {
         Vocal vocal = vocal(usuario);
         Movimiento m = repository.movimientoPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException("Movimiento no encontrado."));
-        if (m.cancelado()) {
-            throw new IllegalStateException("El movimiento ya está cancelado.");
-        }
         if (m.grupoId() == null) {
             if (!vocal.nombre().equals(m.registradoPor())) {
-                throw new IllegalStateException("Solo quien registró el pago del fondo común puede cancelarlo.");
+                throw new IllegalStateException("Solo quien registró el pago del fondo común puede borrarlo.");
             }
         } else if (!m.grupoId().equals(vocal.grupoId())) {
-            throw new IllegalStateException("Solo el vocal del grupo puede cancelar este movimiento.");
+            throw new IllegalStateException("Solo el vocal del grupo puede borrar este movimiento.");
         }
-        repository.cancelar(id, motivo.trim(), vocal.nombre());
+        repository.borrar(id);
         return m.grupoId() == null ? "COMUN" : m.grupoId();
     }
 
