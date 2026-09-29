@@ -116,4 +116,17 @@ public class FondoRepository {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """, tipo, grupoId, ninoId, concepto, monto, fecha, registradoPor, comprobante);
     }
+
+    public Optional<Movimiento> movimientoPorId(int id) {
+        return jdbc.query(SELECT_MOVIMIENTOS + " AND m.id = ?", MOVIMIENTO, id)
+                .stream().findFirst();
+    }
+
+    public void cancelar(int id, String motivo, String canceladoPor) {
+        jdbc.update("""
+                UPDATE movimiento
+                   SET cancelado = TRUE, motivo_cancelacion = ?, cancelado_por = ?
+                 WHERE id = ? AND cancelado = FALSE
+                """, motivo, canceladoPor, id);
+    }
 }

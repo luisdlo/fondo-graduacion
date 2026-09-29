@@ -76,12 +76,16 @@ public class FondoController {
     public String movimientos(@RequestParam(required = false) String tipo,
                               @RequestParam(required = false) String grupo,
                               @RequestParam(defaultValue = "false") boolean cancelados,
+                              Principal principal,
                               Model model) {
         model.addAttribute("movimientos", service.movimientos(tipo, grupo, cancelados));
         model.addAttribute("grupos", service.grupos());
         model.addAttribute("tipo", tipo);
         model.addAttribute("grupo", grupo);
         model.addAttribute("cancelados", cancelados);
+        if (principal != null) {
+            model.addAttribute("vocal", service.vocal(principal.getName()));
+        }
         return "movimientos";
     }
 
@@ -153,13 +157,31 @@ public class FondoController {
                                   @RequestParam(required = false) MultipartFile comprobante,
                                   RedirectAttributes redirect) {
         try {
-            service.registrarEgreso(principal.getName(), "COMUN".equals(origen), concepto, monto, fecha, comprobante);
+            boolean fondoComun = "COMUN".equals(origen);
+            service.registrarEgreso(principal.getName(), fondoComun, concepto, monto, fecha, comprobante);
             redirect.addFlashAttribute("ok", comprobante == null || comprobante.isEmpty()
                     ? "Gasto registrado sin comprobante." : "Gasto registrado.");
+            String grupo = fondoComun ? "COMUN" : service.vocal(principal.getName()).grupoId();
+            return "redirect:/?tab=movimientos&grupo=" + grupo;
         } catch (IllegalArgumentException | DataIntegrityViolationException | IOException e) {
             redirect.addFlashAttribute("error", mensaje(e));
+            return "redirect:/";
         }
-        return "redirect:/";
+    }
+
+    @PostMapping("/registro/cancelar/{id}")
+    public String cancelarMovimiento(@PathVariable int id,
+                                     @RequestParam String motivo,
+                                     Principal principal,
+                                     RedirectAttributes redirect) {
+        try {
+            String grupo = service.cancelarMovimiento(principal.getName(), id, motivo);
+            redirect.addFlashAttribute("ok", "Movimiento cancelado.");
+            return "redirect:/?tab=movimientos&grupo=" + grupo;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+            return "redirect:/?tab=movimientos";
+        }
     }
 
     private String mensaje(Exception e) {

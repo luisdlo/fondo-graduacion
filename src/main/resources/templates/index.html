@@ -29,7 +29,7 @@
   <!-- Solo el vocal logueado puede registrar; su grupo y nombre salen del login -->
   <div class="actions" th:if="${vocal != null}">
     <button class="btn in" hx-get="/registro/ingreso" hx-target="#modal-body" onclick="abrirModal()">+ Ingreso</button>
-    <button class="btn out" hx-get="/registro/egreso" hx-target="#panel">− Gasto / pago</button>
+    <button class="btn out" hx-get="/registro/egreso" hx-target="#modal-body" onclick="abrirModal()">− Gasto / pago</button>
   </div>
 
   <!-- Cada pestaña pide su pedazo de HTML y lo pone en #panel -->

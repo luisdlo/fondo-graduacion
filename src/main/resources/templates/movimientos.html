@@ -19,7 +19,7 @@
 
   <div class="meta" th:text="|${movimientos.size()} movimientos|">0 movimientos</div>
   <ul class="movs">
-    <th:block th:each="m : ${movimientos}"><li th:replace="~{fragments :: mov(${m})}"></li></th:block>
+    <th:block th:each="m : ${movimientos}"><li th:replace="~{fragments :: mov(${m}, ${vocal})}"></li></th:block>
     <li class="muted" style="padding:12px 0" th:if="${movimientos.isEmpty()}">Sin movimientos con esos filtros.</li>
   </ul>
 </div>

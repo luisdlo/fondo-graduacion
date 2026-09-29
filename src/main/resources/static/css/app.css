@@ -57,6 +57,12 @@ li.mov:first-child{border-top:0}
 .is-cancel .monto,.is-cancel .mov-title{text-decoration:line-through;opacity:.6}
 .warn{color:var(--warn);font-weight:600}
 .cancelado{font-size:13px;margin-top:6px;background:var(--warn-soft);color:var(--warn);padding:6px 8px;border-radius:8px}
+li.mov-clickable{cursor:pointer;transition:background .12s}
+li.mov-clickable:hover{background:var(--brand-soft)}
+li.mov-clickable .mov-title::after{content:" ⋮";color:var(--muted);font-weight:400}
+.mov-cancel{display:none;grid-column:1/-1;padding:12px;margin-top:8px;background:var(--bg);border:1px dashed var(--line);border-radius:10px}
+li.mov.open .mov-cancel{display:block}
+.mov-cancel .form-actions{margin-top:10px}
 
 .list-head{margin-bottom:8px}
 .list-head h2{margin:0}

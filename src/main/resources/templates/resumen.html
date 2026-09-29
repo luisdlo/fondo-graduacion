@@ -34,14 +34,14 @@
   <div class="card">
     <h2>Pagos de la graduación</h2>
     <ul class="movs" th:if="${!pagos.isEmpty()}">
-      <th:block th:each="m : ${pagos}"><li th:replace="~{fragments :: mov(${m})}"></li></th:block>
+      <th:block th:each="m : ${pagos}"><li th:replace="~{fragments :: mov(${m}, null)}"></li></th:block>
     </ul>
     <p class="muted" th:if="${pagos.isEmpty()}">Todavía no hay pagos.</p>
   </div>
   <div class="card">
     <h2>Últimos movimientos · Fondo de graduación</h2>
     <ul class="movs">
-      <th:block th:each="m : ${ultimos}"><li th:replace="~{fragments :: mov(${m})}"></li></th:block>
+      <th:block th:each="m : ${ultimos}"><li th:replace="~{fragments :: mov(${m}, null)}"></li></th:block>
     </ul>
   </div>
 </div>

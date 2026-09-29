@@ -107,6 +107,32 @@ public class FondoService {
                 monto, fecha != null ? fecha : LocalDate.now(), vocal.nombre(), archivo);
     }
 
+    /**
+     * Cancela un movimiento (nunca se borra: queda tachado con motivo y quién).
+     * Solo el vocal del grupo puede cancelar sus movimientos; en fondo común solo quien lo registró.
+     * Regresa el grupo (A/B/C o COMUN) para redirigir con el filtro correcto.
+     */
+    public String cancelarMovimiento(String usuario, int id, String motivo) {
+        if (motivo == null || motivo.isBlank()) {
+            throw new IllegalArgumentException("Escribe el motivo de la cancelación.");
+        }
+        Vocal vocal = vocal(usuario);
+        Movimiento m = repository.movimientoPorId(id)
+                .orElseThrow(() -> new IllegalArgumentException("Movimiento no encontrado."));
+        if (m.cancelado()) {
+            throw new IllegalStateException("El movimiento ya está cancelado.");
+        }
+        if (m.grupoId() == null) {
+            if (!vocal.nombre().equals(m.registradoPor())) {
+                throw new IllegalStateException("Solo quien registró el pago del fondo común puede cancelarlo.");
+            }
+        } else if (!m.grupoId().equals(vocal.grupoId())) {
+            throw new IllegalStateException("Solo el vocal del grupo puede cancelar este movimiento.");
+        }
+        repository.cancelar(id, motivo.trim(), vocal.nombre());
+        return m.grupoId() == null ? "COMUN" : m.grupoId();
+    }
+
     /** Regresa el archivo del comprobante, o null si no existe o el nombre intenta salirse de la carpeta. */
     public Resource comprobante(String nombre) {
         Path archivo = COMPROBANTES.resolve(nombre).normalize();
