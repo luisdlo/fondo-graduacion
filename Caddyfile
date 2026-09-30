@@ -1,27 +1,26 @@
-# Caddy escuchando en el puerto 80 del VPS.
-# Cuando tengas dominio, cambia ":80" por "fondo.tudominio.mx" y Caddy
-# saca certificado HTTPS automáticamente (necesitas abrir el puerto 443
-# en el docker-compose y en el firewall del VPS).
+# Caddy detrás del dominio fondo-ingles.ddns.net (No-IP).
+# Caddy escucha 80 y 443, saca cert de Let's Encrypt automático y renueva solo.
+# El puerto 443 ya está publicado en docker-compose.yml.
 
-:80 {
+fondo-ingles.ddns.net {
     # -----------------------------------------------------------------
-    # Dozzle bajo /logs con contraseña.
-    # Genera el hash una vez con:
+    # Dozzle bajo /logs con basic auth.
+    # Para cambiar el password, genera un hash nuevo:
     #   docker run --rm caddy caddy hash-password --plaintext "TU_PASSWORD"
-    # y reemplaza la línea de "admin ..." de abajo con la salida.
+    # y reemplaza el hash de "admin ..." de abajo con la salida.
     # -----------------------------------------------------------------
     handle /logs* {
         basicauth {
-            admin $2a$14$PONER_AQUI_HASH_GENERADO_CON_CADDY_HASH_PASSWORD
+            admin $2a$14$2n.OKNNrsnNKmpBROGnMMOcA9GGo1lMywmBlXjmX8JEQWOe7AiGvq
         }
         reverse_proxy dozzle:8080
     }
 
-    # Consola H2 bajo /h2 con basic auth (mismo usuario/password que Dozzle).
+    # Consola H2 bajo /h2 con basic auth (mismo hash que Dozzle).
     # OJO: la consola da acceso completo a la BD. Nunca la dejes sin auth.
     handle /h2* {
         basicauth {
-            admin $2a$14$PONER_AQUI_HASH_GENERADO_CON_CADDY_HASH_PASSWORD
+            admin $2a$14$2n.OKNNrsnNKmpBROGnMMOcA9GGo1lMywmBlXjmX8JEQWOe7AiGvq
         }
         reverse_proxy app:8080
     }

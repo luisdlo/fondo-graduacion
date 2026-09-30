@@ -1,4 +1,4 @@
-# Stack para el VPS de Vultr: app Spring Boot + Caddy (puerto 80) + Dozzle (logs).
+# Stack para el VPS de Vultr: app Spring Boot + Caddy (puertos 80/443) + Dozzle (logs).
 # La BD H2 y los comprobantes se guardan en ./data del host (bind mount) para que
 # llevártelos a local sea un simple `scp -r vps:/ruta/app/data ./backup`.
 
@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"   # descomenta cuando pongas dominio; Caddy saca cert automático
+      - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
