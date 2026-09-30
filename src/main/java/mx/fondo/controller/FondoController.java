@@ -57,7 +57,8 @@ public class FondoController {
     }
 
     @GetMapping("/login")
-    public String login() {
+    public String login(Model model) {
+        model.addAttribute("vocales", service.vocales());
         return "login";
     }
 

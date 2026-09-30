@@ -16,7 +16,13 @@
     <div class="alert ok" th:if="${param.logout}">Sesión cerrada.</div>
 
     <form class="form" th:action="@{/login}" method="post">
-      <label class="field">Usuario<input name="username" autocomplete="username" required autofocus></label>
+      <label class="field">Usuario
+        <select name="username" required autofocus autocomplete="username">
+          <option value="">— Selecciona un vocal —</option>
+          <option th:each="v : ${vocales}" th:value="${v.usuario}"
+                  th:text="|${v.nombre} · ${v.grupoNombre}|">Vocal · Grupo</option>
+        </select>
+      </label>
       <label class="field">Contraseña<input name="password" type="password" autocomplete="current-password" required></label>
       <button class="btn primary">Entrar</button>
     </form>

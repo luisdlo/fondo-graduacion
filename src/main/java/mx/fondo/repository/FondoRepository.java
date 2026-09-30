@@ -88,6 +88,16 @@ public class FondoRepository {
         return jdbc.query(sql.toString(), MOVIMIENTO, args.toArray());
     }
 
+    /** Todos los vocales activos (con usuario y password) para el combo del login. */
+    public List<Vocal> vocales() {
+        return jdbc.query("""
+                        SELECT id AS grupo_id, nombre AS grupo_nombre, vocal AS nombre, usuario, password
+                          FROM grupo
+                         WHERE usuario IS NOT NULL AND password IS NOT NULL
+                         ORDER BY id
+                        """, new DataClassRowMapper<>(Vocal.class));
+    }
+
     /** Vocal por usuario; solo los que ya tienen password capturado pueden entrar. */
     public Optional<Vocal> vocalPorUsuario(String usuario) {
         return jdbc.query("""

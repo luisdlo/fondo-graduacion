@@ -66,6 +66,10 @@ public class FondoService {
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + usuario));
     }
 
+    public List<Vocal> vocales() {
+        return repository.vocales();
+    }
+
     public List<Nino> ninosDelGrupo(String grupoId) {
         return repository.ninosDelGrupo(grupoId);
     }
