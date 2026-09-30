@@ -130,7 +130,7 @@ public class FondoController {
         try {
             service.registrarIngreso(principal.getName(), ninoId, monto);
             redirect.addFlashAttribute("ok", "Ingreso registrado.");
-            return "redirect:/?tab=movimientos&grupo=" + service.vocal(principal.getName()).grupoId();
+            return "redirect:/?tab=movimientos";
         } catch (IllegalArgumentException | DataIntegrityViolationException e) {
             redirect.addFlashAttribute("error", mensaje(e));
             return "redirect:/";
@@ -155,7 +155,7 @@ public class FondoController {
             service.registrarEgreso(principal.getName(), false, concepto, monto, fecha, comprobante);
             redirect.addFlashAttribute("ok", comprobante == null || comprobante.isEmpty()
                     ? "Gasto registrado sin comprobante." : "Gasto registrado.");
-            return "redirect:/?tab=movimientos&grupo=" + service.vocal(principal.getName()).grupoId();
+            return "redirect:/?tab=movimientos";
         } catch (IllegalArgumentException | DataIntegrityViolationException | IOException e) {
             redirect.addFlashAttribute("error", mensaje(e));
             return "redirect:/";

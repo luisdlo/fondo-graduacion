@@ -28,7 +28,15 @@ public class SeguridadConfig {
                 .loginPage("/login")
                 .defaultSuccessUrl("/registro/tras-login", true)
                 .permitAll())
-            .logout(logout -> logout.logoutSuccessUrl("/"))
+            .logout(logout -> logout
+                .logoutSuccessUrl("/")
+                .deleteCookies("JSESSIONID", "remember-me"))
+            // Sesión persistente: al login queda una cookie "remember-me" válida por 30 días.
+            // Aunque el vocal cierre el navegador, al regresar entra automáticamente.
+            .rememberMe(rm -> rm
+                .key("fondo-graduacion-remember-me-2026")
+                .tokenValiditySeconds(30 * 24 * 60 * 60)
+                .alwaysRemember(true))
             // La consola H2 (/h2) no manda token CSRF y se muestra en frames
             .csrf(csrf -> csrf.ignoringRequestMatchers(PathRequest.toH2Console()))
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
