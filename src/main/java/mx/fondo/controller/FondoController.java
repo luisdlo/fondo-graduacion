@@ -162,6 +162,27 @@ public class FondoController {
         }
     }
 
+    @GetMapping("/registro/cambiar-password")
+    public String formCambiarPassword(Principal principal, Model model) {
+        model.addAttribute("vocal", service.vocal(principal.getName()));
+        return "cambiar-password-form";
+    }
+
+    @PostMapping("/registro/cambiar-password")
+    public String cambiarPassword(Principal principal,
+                                  @RequestParam String actual,
+                                  @RequestParam String nueva,
+                                  @RequestParam String confirmar,
+                                  RedirectAttributes redirect) {
+        try {
+            service.cambiarPassword(principal.getName(), actual, nueva, confirmar);
+            redirect.addFlashAttribute("ok", "Contraseña actualizada.");
+        } catch (IllegalArgumentException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/";
+    }
+
     @PostMapping("/registro/borrar/{id}")
     public String borrarMovimiento(@PathVariable int id,
                                    Principal principal,

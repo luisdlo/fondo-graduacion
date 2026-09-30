@@ -18,6 +18,7 @@
     <!-- Sesión: si hay vocal logueado se muestra quién es; si no, el botón para entrar -->
     <div class="user" th:if="${vocal != null}">
       <span><strong th:text="${vocal.nombre}">Vocal</strong> · <span th:text="${vocal.grupoNombre}">Grupo</span></span>
+      <button class="btn" hx-get="/registro/cambiar-password" hx-target="#modal-body" onclick="abrirModal()">🔒 Cambiar contraseña</button>
       <form th:action="@{/logout}" method="post"><button class="link">Salir</button></form>
     </div>
     <a class="btn" th:if="${vocal == null}" th:href="@{/login}">Entrar (vocales)</a>

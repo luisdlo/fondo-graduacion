@@ -119,4 +119,8 @@ public class FondoRepository {
     public void borrar(int id) {
         jdbc.update("DELETE FROM movimiento WHERE id = ?", id);
     }
+
+    public void actualizarPassword(String grupoId, String passwordCodificado) {
+        jdbc.update("UPDATE grupo SET password = ? WHERE id = ?", passwordCodificado, grupoId);
+    }
 }

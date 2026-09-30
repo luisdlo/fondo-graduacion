@@ -9,6 +9,7 @@ import mx.fondo.model.Vocal;
 import mx.fondo.repository.FondoRepository;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,9 +34,11 @@ public class FondoService {
     private static final Path COMPROBANTES = Path.of("data", "comprobantes").toAbsolutePath().normalize();
 
     private final FondoRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public FondoService(FondoRepository repository) {
+    public FondoService(FondoRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<Grupo> grupos() {
@@ -90,6 +93,24 @@ public class FondoService {
         String archivo = guardarComprobante(comprobante);
         repository.insertarMovimiento("EGRESO", fondoComun ? null : vocal.grupoId(), null, concepto.trim(),
                 monto, fecha != null ? fecha : LocalDate.now(), vocal.nombre(), archivo);
+    }
+
+    /**
+     * Cambia la contraseña del vocal. Verifica la actual y guarda la nueva con bcrypt
+     * (el DelegatingPasswordEncoder acepta el hash o texto plano al iniciar sesión).
+     */
+    public void cambiarPassword(String usuario, String actual, String nueva, String confirmar) {
+        if (nueva == null || nueva.length() < 6) {
+            throw new IllegalArgumentException("La nueva contraseña debe tener al menos 6 caracteres.");
+        }
+        if (!nueva.equals(confirmar)) {
+            throw new IllegalArgumentException("La confirmación no coincide con la nueva contraseña.");
+        }
+        Vocal vocal = vocal(usuario);
+        if (actual == null || !passwordEncoder.matches(actual, vocal.password())) {
+            throw new IllegalArgumentException("La contraseña actual no es correcta.");
+        }
+        repository.actualizarPassword(vocal.grupoId(), passwordEncoder.encode(nueva));
     }
 
     /**
