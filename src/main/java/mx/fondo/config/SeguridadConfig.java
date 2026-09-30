@@ -1,6 +1,5 @@
 package mx.fondo.config;
 
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -37,8 +36,10 @@ public class SeguridadConfig {
                 .key("fondo-graduacion-remember-me-2026")
                 .tokenValiditySeconds(30 * 24 * 60 * 60)
                 .alwaysRemember(true))
-            // La consola H2 (/h2) no manda token CSRF y se muestra en frames
-            .csrf(csrf -> csrf.ignoringRequestMatchers(PathRequest.toH2Console()))
+            // La consola H2 (/h2) no manda token CSRF y se muestra en frames.
+            // Matcher estático (no depende del bean H2ConsoleProperties, que no existe
+            // cuando SPRING_H2_CONSOLE_ENABLED=false en prod).
+            .csrf(csrf -> csrf.ignoringRequestMatchers(antMatcher("/h2/**")))
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
         return http.build();
     }

@@ -194,7 +194,37 @@ docker compose down -v
 docker stats
 ```
 
-## Actualizaciones
+## Proteger tu configuración local del `git pull`
+
+Al desplegar editas dos archivos con datos específicos del VPS:
+
+- `Caddyfile` — dominio real y hash bcrypt del password de Dozzle
+- `docker-compose.yml` — puerto 443 descomentado
+
+Si estos archivos están versionados en git y haces `git pull`, git te va
+a marcar merge conflicts o te va a sobrescribir tu config. Para evitarlo
+márcalos como "asume sin cambios" **una sola vez** después del deploy
+inicial:
+
+```bash
+cd /opt/fondo
+git update-index --assume-unchanged Caddyfile docker-compose.yml
+```
+
+De ahora en adelante `git pull` los ignora — jala todo lo demás
+(código, `schema.sql`, `Dockerfile`, etc.) pero deja tus dos archivos
+locales intactos.
+
+Si algún día quieres que git los vuelva a ver (para hacer un commit
+desde el VPS o resincronizar con lo del repo):
+
+```bash
+git update-index --no-assume-unchanged Caddyfile docker-compose.yml
+```
+
+## Actualizaciones (deploy nueva versión del código)
+
+Ya con la protección anterior, actualizar es una línea:
 
 ```bash
 cd /opt/fondo
@@ -203,7 +233,101 @@ docker compose up -d --build app
 ```
 
 El `--build app` solo reconstruye la imagen de la app. Caddy y Dozzle
-no necesitan rebuild.
+no necesitan rebuild (usan imágenes públicas que se descargan).
+
+Si querés forzar que Caddy y Dozzle también refresquen a sus últimas
+imágenes públicas:
+
+```bash
+docker compose pull
+docker compose up -d --build app
+```
+
+## Redeploy desde cero (borrar todo y empezar limpio)
+
+Útil si algo se corrompió, la BD quedó mal o querés probar el flujo
+completo. **Antes de nada, backup:**
+
+```bash
+cd /opt/fondo
+tar czf /root/backup-antes-de-redeploy-$(date +%F-%H%M).tar.gz -C /opt/fondo data
+ls -lh /root/backup-antes-de-redeploy-*.tar.gz   # verifica que se creó
+```
+
+### Opción A — Redeploy conservando la BD
+
+```bash
+cd /opt/fondo
+
+# 1) Bajar todos los contenedores (los datos en ./data se quedan)
+docker compose down
+
+# 2) Traer el código más reciente
+git pull
+
+# 3) Reconstruir imagen y arrancar
+docker compose up -d --build
+
+# 4) Ver logs de la app para confirmar arranque limpio
+docker compose logs -f app
+```
+
+Los grupos, niños, movimientos y comprobantes siguen porque `./data`
+no se toca.
+
+### Opción B — Redeploy borrando la BD (nuclear, empieza en cero)
+
+⚠️ Esto **borra todos los movimientos, passwords cambiados, etc.**
+`schema.sql` va a recrear los 3 grupos con `default123` como si fuera
+la primera vez.
+
+```bash
+cd /opt/fondo
+
+# 1) Backup por si acaso (ya lo hiciste arriba pero por si)
+tar czf /root/backup-nuclear-$(date +%F-%H%M).tar.gz -C /opt/fondo data
+
+# 2) Bajar contenedores y borrar volúmenes de Caddy
+docker compose down -v
+
+# 3) Borrar todos los datos de la BD y comprobantes
+rm -rf data/*.db data/comprobantes/*
+
+# 4) Traer código y levantar de cero
+git pull
+docker compose up -d --build
+
+# 5) Verificar que schema.sql corrió y creó las tablas + datos iniciales
+docker compose logs app | grep -i "schema\|hikari\|started"
+```
+
+En el primer arranque después de esto, `schema.sql` mete los 3 grupos
+con `default123` y los 56 niños. HTTPS sigue funcionando porque los
+volúmenes de Caddy (`caddy-data`, `caddy-config`) se recrean y Caddy
+pide un cert nuevo al detectar el dominio.
+
+### Opción C — Reinstalar desde otro VPS (mudanza completa)
+
+```bash
+# En el VPS actual, backup y bajarlo a tu Mac:
+ssh root@VIEJO_VPS
+cd /opt/fondo
+docker compose down
+tar czf /tmp/fondo-full-backup.tar.gz -C /opt/fondo data Caddyfile docker-compose.yml
+exit
+scp root@VIEJO_VPS:/tmp/fondo-full-backup.tar.gz .
+
+# En el VPS nuevo, después de instalar docker y clonar el repo:
+scp fondo-full-backup.tar.gz root@NUEVO_VPS:/tmp/
+ssh root@NUEVO_VPS
+cd /opt/fondo
+tar xzf /tmp/fondo-full-backup.tar.gz -C /opt/fondo/
+git update-index --assume-unchanged Caddyfile docker-compose.yml
+docker compose up -d --build
+```
+
+En No-IP cambia el A record del hostname al IP del nuevo VPS. Caddy
+va a renovar el cert automáticamente cuando el DNS propague.
 
 ## Seguridad — cosas a revisar antes de producción real
 
