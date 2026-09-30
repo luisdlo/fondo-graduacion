@@ -78,3 +78,81 @@ SELECT n.grupo_id, n.id AS nino_id, n.nombre,
 FROM nino n
 LEFT JOIN movimiento m ON m.nino_id = n.id AND m.cancelado = FALSE
 GROUP BY n.grupo_id, n.id, n.nombre;
+
+-- ============================================================================
+-- Datos iniciales (solo se cargan si la tabla está vacía; idempotente).
+-- En una BD nueva (VPS o local recién clonado) llegan solos en el 1er arranque.
+-- Si la tabla ya tiene datos, estas sentencias no hacen nada.
+-- ============================================================================
+
+-- Los 3 grupos con vocal, usuario y password inicial "default123".
+-- Cada vocal cambia su password desde la UI al primer login (queda en {bcrypt}...).
+INSERT INTO grupo (id, nombre, vocal, usuario, password)
+SELECT * FROM (VALUES
+  ('A', 'Grupo A', 'Idalia',  'grupoa', 'default123'),
+  ('B', 'Grupo B', 'Diana',   'grupob', 'default123'),
+  ('C', 'Grupo C', 'Jessica', 'grupoc', 'default123')
+) AS x(id, nombre, vocal, usuario, password)
+WHERE NOT EXISTS (SELECT 1 FROM grupo);
+
+-- Los 56 niños de los tres grupos de 6°: 21 A + 18 B + 17 C.
+INSERT INTO nino (nombre, grupo_id)
+SELECT * FROM (VALUES
+  ('Aranda Perez Jazdhra',              'A'),
+  ('Balam Navarro Korra Sofia',         'A'),
+  ('Balmes Molina Olivia',              'A'),
+  ('Brisson Pacheco Samantha Patricia', 'A'),
+  ('Cano Maza Maya',                    'A'),
+  ('Castillo Martinez Emiliano',        'A'),
+  ('Cruz Jara Cristian Alejandro',      'A'),
+  ('Cruz Rosaldo Crista Isabella',      'A'),
+  ('Flores Lozano Luca Marcelo',        'A'),
+  ('Garcia Vives Livia',                'A'),
+  ('Hernandez Pech Matias Omar',        'A'),
+  ('Hernandez Torres Yeiden Roberto',   'A'),
+  ('Jaime Lares Estefanía',             'A'),
+  ('Loeza Constantino Victor Joshua',   'A'),
+  ('Martinez Lopez Cloe',               'A'),
+  ('Najera Contreras Gael',             'A'),
+  ('Pat Azcorra Dante Akim',            'A'),
+  ('Rocha Flores Antonella',            'A'),
+  ('Sansores Antonio Frida Paola',      'A'),
+  ('Vargas Lievin Chloe',               'A'),
+  ('Yepez Sandria Corina',              'A'),
+  ('Alamilla Garcia Alexa Nicole',      'B'),
+  ('Balmes Molina Pablo',               'B'),
+  ('Davids Plaate Micaela Guadalupe',   'B'),
+  ('Franco Gutierrez Carlo Mateo',      'B'),
+  ('Guerrero Ledesma Daniela',          'B'),
+  ('Iglesias Solano Dominica',          'B'),
+  ('Jaime Lares Valeria',               'B'),
+  ('Ku Romero Nicte Esperanza',         'B'),
+  ('Lara Foyo Renata',                  'B'),
+  ('Linche Torres Camilo',              'B'),
+  ('Madala Flores Allegra Ines',        'B'),
+  ('Mar Vazquez Alaia Valeria',         'B'),
+  ('Marquez Castillo Selva Victoria',   'B'),
+  ('Martinez Martinez Mia Alejandra',   'B'),
+  ('Reynal Bustamante Emiliano',        'B'),
+  ('Ruiz Suárez Maria',                 'B'),
+  ('Vallejo Gonzalez Valentina',        'B'),
+  ('Vazquez Delgadillo Mia Livier',     'B'),
+  ('Arteaga Lopez Sofia Victoria',      'C'),
+  ('Gentile Sandoval Camille Giuliette','C'),
+  ('Gonzalez Molina Santiago Javier',   'C'),
+  ('Hernandez Cabrera Sofia',           'C'),
+  ('Hernandez Lopez Yaretzi',           'C'),
+  ('Jimenez Mata Sofia',                'C'),
+  ('Lopez Lucario Arturo Said',         'C'),
+  ('Monfil Olivares Jazmin',            'C'),
+  ('Morentin Aguirre Alejandro',        'C'),
+  ('Paret Rodriguez Emilio',            'C'),
+  ('Patrick Levi Sevag',                'C'),
+  ('Peraza Lopez Lyam Alexander',       'C'),
+  ('Perez Ortega Samuel David',         'C'),
+  ('Real Ramos Renata',                 'C'),
+  ('Rodriguez Rivera Luna Isabella',    'C'),
+  ('Verdalet Lopez Matias Olmar',       'C'),
+  ('Vidales Pimentel Leon Emilio',      'C')
+) AS x(nombre, grupo_id)
+WHERE NOT EXISTS (SELECT 1 FROM nino);

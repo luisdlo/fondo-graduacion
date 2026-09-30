@@ -1,2 +1,16 @@
-# Project exclude paths
+# Build
 /target/
+
+# Base de datos H2 (los datos reales no van a git)
+data/*.db
+data/*.db.tmp
+data/*.trace.db
+
+# Comprobantes subidos por las vocales
+data/comprobantes/
+
+# IDEs y sistema
+.idea/
+*.iml
+.vscode/
+.DS_Store
