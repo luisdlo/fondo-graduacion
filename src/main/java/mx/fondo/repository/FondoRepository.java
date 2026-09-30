@@ -5,7 +5,6 @@ import mx.fondo.model.Movimiento;
 import mx.fondo.model.Nino;
 import mx.fondo.model.TotalGeneral;
 import mx.fondo.model.TotalGrupo;
-import mx.fondo.model.TotalNino;
 import mx.fondo.model.Vocal;
 import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -56,11 +55,6 @@ public class FondoRepository {
     public TotalGeneral totalGeneral() {
         return jdbc.queryForObject("SELECT * FROM v_total_general",
                 new DataClassRowMapper<>(TotalGeneral.class));
-    }
-
-    public List<TotalNino> totalesPorNino(String grupoId) {
-        return jdbc.query("SELECT * FROM v_total_nino WHERE grupo_id = ? ORDER BY nombre",
-                new DataClassRowMapper<>(TotalNino.class), grupoId);
     }
 
     /**

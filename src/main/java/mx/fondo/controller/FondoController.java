@@ -67,8 +67,6 @@ public class FondoController {
     public String resumen(Model model) {
         model.addAttribute("grupos", service.totalesPorGrupo());
         model.addAttribute("general", service.totalGeneral());
-        model.addAttribute("pagos", service.pagosGraduacion());
-        model.addAttribute("ultimos", service.ultimosMovimientos());
         return "resumen";
     }
 
@@ -87,14 +85,6 @@ public class FondoController {
             model.addAttribute("vocal", service.vocal(principal.getName()));
         }
         return "movimientos";
-    }
-
-    @GetMapping("/ninos")
-    public String ninos(@RequestParam(defaultValue = "A") String grupo, Model model) {
-        model.addAttribute("ninos", service.aportacionesPorNino(grupo));
-        model.addAttribute("grupos", service.grupos());
-        model.addAttribute("grupo", grupo);
-        return "ninos";
     }
 
     @GetMapping("/totales")
@@ -150,19 +140,16 @@ public class FondoController {
 
     @PostMapping("/egresos")
     public String registrarEgreso(Principal principal,
-                                  @RequestParam(defaultValue = "grupo") String origen,
                                   @RequestParam String concepto,
                                   @RequestParam BigDecimal monto,
                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
                                   @RequestParam(required = false) MultipartFile comprobante,
                                   RedirectAttributes redirect) {
         try {
-            boolean fondoComun = "COMUN".equals(origen);
-            service.registrarEgreso(principal.getName(), fondoComun, concepto, monto, fecha, comprobante);
+            service.registrarEgreso(principal.getName(), false, concepto, monto, fecha, comprobante);
             redirect.addFlashAttribute("ok", comprobante == null || comprobante.isEmpty()
                     ? "Gasto registrado sin comprobante." : "Gasto registrado.");
-            String grupo = fondoComun ? "COMUN" : service.vocal(principal.getName()).grupoId();
-            return "redirect:/?tab=movimientos&grupo=" + grupo;
+            return "redirect:/?tab=movimientos&grupo=" + service.vocal(principal.getName()).grupoId();
         } catch (IllegalArgumentException | DataIntegrityViolationException | IOException e) {
             redirect.addFlashAttribute("error", mensaje(e));
             return "redirect:/";

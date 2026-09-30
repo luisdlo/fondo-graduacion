@@ -34,9 +34,8 @@
 
   <!-- Cada pestaña pide su pedazo de HTML y lo pone en #panel -->
   <nav class="tabs" id="tabs" hx-target="#panel">
-    <button th:classappend="${activeTab == 'resumen'} ? 'active'" hx-get="/resumen">Resumen</button>
+    <button th:classappend="${activeTab == 'resumen'} ? 'active'" hx-get="/resumen">Consulta</button>
     <button th:classappend="${activeTab == 'movimientos'} ? 'active'" hx-get="/movimientos?cancelados=true">Movimientos</button>
-    <button hx-get="/ninos?grupo=A">Por niño</button>
   </nav>
 
   <section id="panel" th:hx-get="${panelUrl}" hx-trigger="load"></section>

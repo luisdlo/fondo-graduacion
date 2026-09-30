@@ -5,7 +5,6 @@ import mx.fondo.model.Movimiento;
 import mx.fondo.model.Nino;
 import mx.fondo.model.TotalGeneral;
 import mx.fondo.model.TotalGrupo;
-import mx.fondo.model.TotalNino;
 import mx.fondo.model.Vocal;
 import mx.fondo.repository.FondoRepository;
 import org.springframework.core.io.FileSystemResource;
@@ -25,7 +24,6 @@ import java.util.UUID;
 @Service
 public class FondoService {
 
-    private static final int ULTIMOS = 5;
     private static final Set<String> TIPOS = Set.of("INGRESO", "EGRESO");
 
     public static final String CONCEPTO = "Fondo de graduación";
@@ -52,23 +50,10 @@ public class FondoService {
         return repository.totalGeneral();
     }
 
-    public List<Movimiento> ultimosMovimientos() {
-        return repository.movimientos(null, null, true, ULTIMOS);
-    }
-
-    /** Pagos de la graduación: gastos que salieron del fondo común. */
-    public List<Movimiento> pagosGraduacion() {
-        return repository.movimientos("EGRESO", "COMUN", false, null);
-    }
-
     public List<Movimiento> movimientos(String tipo, String grupo, boolean incluirCancelados) {
         String tipoValido = (tipo != null && TIPOS.contains(tipo)) ? tipo : null;
         String grupoValido = (grupo == null || grupo.isBlank()) ? null : grupo;
         return repository.movimientos(tipoValido, grupoValido, incluirCancelados, null);
-    }
-
-    public List<TotalNino> aportacionesPorNino(String grupoId) {
-        return repository.totalesPorNino(grupoId);
     }
 
     // ---------- Registro (el vocal sale del login) ----------

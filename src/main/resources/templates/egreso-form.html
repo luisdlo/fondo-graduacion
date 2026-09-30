@@ -1,15 +1,9 @@
 <!-- Formulario de gasto (pedazo que HTMX pone en #panel). Se envía normal y regresa a "/". -->
 <div class="card">
-  <h2>Registrar gasto o pago</h2>
-  <p class="meta" style="margin:-4px 0 12px" th:text="|Se registra a nombre de ${vocal.nombre}|"></p>
+  <h2>Registrar gasto</h2>
+  <p class="meta" style="margin:-4px 0 12px" th:text="|Se registra como gasto del ${vocal.grupoNombre} a nombre de ${vocal.nombre}|"></p>
 
   <form class="form" th:action="@{/egresos}" method="post" enctype="multipart/form-data">
-    <div class="field">¿De dónde sale el dinero?
-      <div class="radio">
-        <label><input type="radio" name="origen" value="grupo" checked> <span th:text="|Gasto del ${vocal.grupoNombre}|">Gasto del grupo</span></label>
-        <label><input type="radio" name="origen" value="COMUN"> Pago de la graduación (fondo común)</label>
-      </div>
-    </div>
     <label class="field">Concepto<input name="concepto" required placeholder="Ej. Anticipo del salón, invitaciones, fotógrafo"></label>
     <div class="grid2">
       <label class="field">Monto<input name="monto" type="number" min="1" step="0.01" inputmode="decimal" required></label>

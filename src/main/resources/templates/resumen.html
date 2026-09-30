@@ -1,4 +1,4 @@
-<!-- Pestaña Resumen (pedazo que HTMX pone en #panel) -->
+<!-- Pestaña Consulta (pedazo que HTMX pone en #panel) -->
 <div class="card hero">
   <h2>Fondo de graduación · disponible</h2>
   <div class="big"><span th:replace="~{fragments :: money(${general.totalGeneral})}"></span></div>
@@ -27,21 +27,5 @@
     <div class="row"><strong>Aporta al fondo</strong>
       <strong><span th:replace="~{fragments :: money(${g.total})}"></span></strong></div>
     <div class="go">Ver movimientos →</div>
-  </div>
-</div>
-
-<div class="grid mt">
-  <div class="card">
-    <h2>Pagos de la graduación</h2>
-    <ul class="movs" th:if="${!pagos.isEmpty()}">
-      <th:block th:each="m : ${pagos}"><li th:replace="~{fragments :: mov(${m}, null)}"></li></th:block>
-    </ul>
-    <p class="muted" th:if="${pagos.isEmpty()}">Todavía no hay pagos.</p>
-  </div>
-  <div class="card">
-    <h2>Últimos movimientos · Fondo de graduación</h2>
-    <ul class="movs">
-      <th:block th:each="m : ${ultimos}"><li th:replace="~{fragments :: mov(${m}, null)}"></li></th:block>
-    </ul>
   </div>
 </div>
