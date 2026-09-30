@@ -26,7 +26,7 @@ public class SeguridadConfig {
                 .anyRequest().permitAll())
             .formLogin(login -> login
                 .loginPage("/login")
-                .defaultSuccessUrl("/", true)
+                .defaultSuccessUrl("/registro/tras-login", true)
                 .permitAll())
             .logout(logout -> logout.logoutSuccessUrl("/"))
             // La consola H2 (/h2) no manda token CSRF y se muestra en frames

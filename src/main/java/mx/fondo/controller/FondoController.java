@@ -61,6 +61,12 @@ public class FondoController {
         return "login";
     }
 
+    /** Después de login, mandar al vocal a Movimientos filtrado por su grupo. */
+    @GetMapping("/registro/tras-login")
+    public String trasLogin(Principal principal) {
+        return "redirect:/?tab=movimientos&grupo=" + service.vocal(principal.getName()).grupoId();
+    }
+
     // ---------- Consulta (público) ----------
 
     @GetMapping("/resumen")
