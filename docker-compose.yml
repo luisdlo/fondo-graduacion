@@ -11,8 +11,10 @@ services:
     environment:
       # BD H2 dentro del volumen montado (fondo.mv.db acaba en ./data del host)
       SPRING_DATASOURCE_URL: jdbc:h2:file:/opt/fondo/data/fondo
-      # Consola H2 encendida; Caddy la protege con basic auth (ver Caddyfile)
+      # Consola H2 encendida; Caddy la protege con basic auth (ver Caddyfile).
+      # webAllowOthers=true porque Caddy proxya desde otro container (H2 lo ve como remoto).
       SPRING_H2_CONSOLE_ENABLED: "true"
+      SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS: "true"
       # Templates cacheados en prod (rendimiento)
       SPRING_THYMELEAF_CACHE: "true"
     volumes:
