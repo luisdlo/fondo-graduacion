@@ -11,8 +11,8 @@ services:
     environment:
       # BD H2 dentro del volumen montado (fondo.mv.db acaba en ./data del host)
       SPRING_DATASOURCE_URL: jdbc:h2:file:/opt/fondo/data/fondo
-      # En producción la consola H2 apagada por seguridad
-      SPRING_H2_CONSOLE_ENABLED: "false"
+      # Consola H2 encendida; Caddy la protege con basic auth (ver Caddyfile)
+      SPRING_H2_CONSOLE_ENABLED: "true"
       # Templates cacheados en prod (rendimiento)
       SPRING_THYMELEAF_CACHE: "true"
     volumes:

@@ -17,6 +17,15 @@
         reverse_proxy dozzle:8080
     }
 
+    # Consola H2 bajo /h2 con basic auth (mismo usuario/password que Dozzle).
+    # OJO: la consola da acceso completo a la BD. Nunca la dejes sin auth.
+    handle /h2* {
+        basicauth {
+            admin $2a$14$PONER_AQUI_HASH_GENERADO_CON_CADDY_HASH_PASSWORD
+        }
+        reverse_proxy app:8080
+    }
+
     # App Spring Boot en la raíz
     handle {
         reverse_proxy app:8080
