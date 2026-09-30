@@ -46,12 +46,13 @@ git clone https://github.com/luisdlo/fondo-graduacion.git /opt/fondo
 cd /opt/fondo
 
 # 2) Genera el hash de tu password para Dozzle
-docker run --rm caddy caddy hash-password --plaintext "elpasswordquequieras"
+docker run --rm caddy caddy hash-password --plaintext "N4LO66vLWky"
 #   Salida: $2a$14$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # 3) Pega el hash en Caddyfile reemplazando el placeholder
 nano Caddyfile
 # La linea:  admin $2a$14$PONER_AQUI_HASH_GENERADO...
+#admin $2a$14$2n.OKNNrsnNKmpBROGnMMOcA9GGo1lMywmBlXjmX8JEQWOe7AiGvq
 # Cambiala por:  admin $2a$14$tuHashRealDelPaso2
 
 # 4) Levanta todo (build + arranque)

@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      # - "443:443"   # descomenta cuando pongas dominio; Caddy saca cert automático
+      - "443:443"   # descomenta cuando pongas dominio; Caddy saca cert automático
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
