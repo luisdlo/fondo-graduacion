@@ -1,0 +1,64 @@
+# Stack para el VPS de Vultr: app Spring Boot + Caddy (puerto 80) + Dozzle (logs).
+# La BD H2 y los comprobantes se guardan en ./data del host (bind mount) para que
+# llevártelos a local sea un simple `scp -r vps:/ruta/app/data ./backup`.
+
+services:
+  app:
+    build: .
+    image: fondo-graduacion:latest
+    container_name: fondo-app
+    restart: unless-stopped
+    environment:
+      # BD H2 dentro del volumen montado (fondo.mv.db acaba en ./data del host)
+      SPRING_DATASOURCE_URL: jdbc:h2:file:/opt/fondo/data/fondo
+      # En producción la consola H2 apagada por seguridad
+      SPRING_H2_CONSOLE_ENABLED: "false"
+      # Templates cacheados en prod (rendimiento)
+      SPRING_THYMELEAF_CACHE: "true"
+    volumes:
+      - ./data:/opt/fondo/data
+    expose:
+      - "8080"        # solo visible dentro de la red; afuera solo Caddy
+    networks:
+      - fondo
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: fondo-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      # - "443:443"   # descomenta cuando pongas dominio; Caddy saca cert automático
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - fondo
+    depends_on:
+      - app
+      - dozzle
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: fondo-dozzle
+    restart: unless-stopped
+    environment:
+      # Servido bajo /logs por Caddy
+      DOZZLE_BASE: /logs
+    volumes:
+      # Solo lectura del socket de docker para poder ver los logs de otros contenedores
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    expose:
+      - "8080"
+    networks:
+      - fondo
+
+networks:
+  fondo:
+    driver: bridge
+
+volumes:
+  # Certificados y estado de Caddy (para HTTPS futuro)
+  caddy-data:
+  caddy-config:
