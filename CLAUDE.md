@@ -96,8 +96,8 @@ db/datos-ejemplo.sql         ← datos de prueba; se corre UNA vez a mano en la 
 
 ## Seguridad
 
-- Públicas: `/`, `/resumen`, `/movimientos`, `/ninos`, `/totales`, `/comprobantes/**`, `/login`, `/css/**`, `/h2/**`.
-- Requieren login: `/registro/**`, `/ingresos`, `/egresos`.
+- Públicas: `/`, `/resumen`, `/ninos`, `/totales`, `/comprobantes/**`, `/login`, `/css/**`, `/h2/**`.
+- Requieren login: `/registro/**`, `/ingresos`, `/egresos`, `/movimientos` (la pestaña solo se ve con sesión).
 - Password en **texto plano** por ahora (lo captura el admin en la BD). El `PasswordEncoder` es
   delegante con NoOp por default: si en la columna se guarda `{bcrypt}$2a$...` también funciona.
 - Usar `AntPathRequestMatcher.antMatcher(...)` en las reglas (hay dos servlets: MVC + consola H2).

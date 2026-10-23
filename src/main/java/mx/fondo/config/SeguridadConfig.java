@@ -21,7 +21,8 @@ public class SeguridadConfig {
     SecurityFilterChain seguridad(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(antMatcher("/registro/**"), antMatcher("/ingresos"), antMatcher("/egresos")).authenticated()
+                .requestMatchers(antMatcher("/registro/**"), antMatcher("/ingresos"), antMatcher("/egresos"),
+                        antMatcher("/movimientos")).authenticated()
                 .anyRequest().permitAll())
             .formLogin(login -> login
                 .loginPage("/login")

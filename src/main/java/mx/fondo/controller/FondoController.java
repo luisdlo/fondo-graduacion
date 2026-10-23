@@ -46,7 +46,7 @@ public class FondoController {
         }
         String panelUrl = "/resumen";
         String activeTab = "resumen";
-        if ("movimientos".equals(tab)) {
+        if ("movimientos".equals(tab) && principal != null) {
             activeTab = "movimientos";
             panelUrl = "/movimientos?cancelados=true"
                     + (grupo != null && !grupo.isBlank() ? "&grupo=" + grupo : "");
@@ -71,7 +71,8 @@ public class FondoController {
     // ---------- Consulta (público) ----------
 
     @GetMapping("/resumen")
-    public String resumen(Model model) {
+    public String resumen(Principal principal, Model model) {
+        model.addAttribute("logueado", principal != null);
         model.addAttribute("grupos", service.totalesPorGrupo());
         model.addAttribute("general", service.totalGeneral());
         return "resumen";

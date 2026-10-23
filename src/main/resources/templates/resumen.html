@@ -11,10 +11,12 @@
 </div>
 
 <div class="grid mt">
-  <div class="card card-link" th:each="g : ${grupos}"
-       th:hx-get="@{/movimientos(grupo=${g.grupoId}, cancelados=true)}"
+  <!-- Solo con sesión la tarjeta lleva a Movimientos (si no, th:hx-get queda en null y no se pinta) -->
+  <div class="card" th:each="g : ${grupos}"
+       th:classappend="${logueado} ? 'card-link'"
+       th:hx-get="${logueado} ? @{/movimientos(grupo=${g.grupoId}, cancelados=true)}"
        hx-target="#panel"
-       th:attr="title=|Ver movimientos del ${g.nombre}|"
+       th:title="${logueado} ? |Ver movimientos del ${g.nombre}|"
        onclick="document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('active', x.textContent.trim() === 'Movimientos'));">
     <div class="row" style="padding:0 0 8px">
       <span class="pill" th:classappend="${'g-' + g.grupoId}" th:text="${g.nombre}">Grupo A</span>
@@ -26,6 +28,6 @@
       <span class="neg"><span th:replace="~{fragments :: money(${g.gastos})}"></span></span></div>
     <div class="row"><strong>Aporta al fondo</strong>
       <strong><span th:replace="~{fragments :: money(${g.total})}"></span></strong></div>
-    <div class="go">Ver movimientos →</div>
+    <div class="go" th:if="${logueado}">Ver movimientos →</div>
   </div>
 </div>
