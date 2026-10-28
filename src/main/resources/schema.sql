@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS movimiento (
 
   CONSTRAINT ck_tipo        CHECK (tipo IN ('INGRESO', 'EGRESO')),
   CONSTRAINT ck_monto       CHECK (monto > 0),
-  -- Ingresos: siempre de un grupo, concepto fijo y solo $500 o $1,000
-  CONSTRAINT ck_ingreso     CHECK (tipo = 'EGRESO' OR (grupo_id IS NOT NULL AND concepto = 'Fondo de graduación' AND monto IN (500, 1000))),
+  -- Ingresos: siempre de un grupo y con uno de los conceptos permitidos (ver ck_ingreso abajo)
+  CONSTRAINT ck_ingreso     CHECK (tipo = 'EGRESO' OR (grupo_id IS NOT NULL AND concepto IN ('Fondo de graduación', 'Halloween', 'Rifa 1 (Diciembre)', 'Rifa 2 (Febrero)'))),
   -- El niño solo aplica a ingresos
   CONSTRAINT ck_nino        CHECK (nino_id IS NULL OR tipo = 'INGRESO'),
   -- Cancelar exige motivo y quién
@@ -48,6 +48,25 @@ CREATE TABLE IF NOT EXISTS movimiento (
   -- El niño debe ser del mismo grupo que el movimiento
   CONSTRAINT fk_nino_grupo  FOREIGN KEY (nino_id, grupo_id) REFERENCES nino(id, grupo_id)
 );
+
+-- BD ya existentes: reemplaza el ck_ingreso viejo (solo "Fondo de graduación" y $500/$1,000)
+-- por el actual. Idempotente: se puede correr en cada arranque.
+ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS ck_ingreso;
+ALTER TABLE movimiento ADD CONSTRAINT ck_ingreso
+  CHECK (tipo = 'EGRESO' OR (grupo_id IS NOT NULL AND concepto IN ('Fondo de graduación', 'Halloween', 'Rifa 1 (Diciembre)', 'Rifa 2 (Febrero)')));
+
+-- Evento del ingreso cuando no es de un niño (la lista vive en FondoService.EVENTOS).
+ALTER TABLE movimiento ADD COLUMN IF NOT EXISTS evento VARCHAR(100);
+
+-- Ingresos viejos "sin niño" quedan como Halloween (después de la primera vez ya no encuentra nada).
+UPDATE movimiento SET evento = 'Halloween'
+ WHERE tipo = 'INGRESO' AND nino_id IS NULL AND evento IS NULL;
+
+-- Ingreso: exactamente uno de niño o evento. Gasto: nunca evento.
+ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS ck_nino_evento;
+ALTER TABLE movimiento ADD CONSTRAINT ck_nino_evento CHECK (
+  (tipo = 'INGRESO' AND (nino_id IS NULL) <> (evento IS NULL))
+  OR (tipo = 'EGRESO' AND evento IS NULL));
 
 -- ---------- Totales (solo movimientos no cancelados) ----------
 

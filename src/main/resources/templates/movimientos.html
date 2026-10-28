@@ -14,6 +14,10 @@
       <option th:each="g : ${grupos}" th:value="${g.id}" th:text="${g.nombre}" th:selected="${grupo == g.id}">Grupo A</option>
       <option value="COMUN" th:selected="${grupo == 'COMUN'}">Fondo común (graduación)</option>
     </select>
+    <select name="evento">
+      <option value="" th:selected="${evento == null or evento == ''}">Todos los eventos</option>
+      <option th:each="e : ${eventos}" th:value="${e}" th:text="${e}" th:selected="${evento == e}">Halloween</option>
+    </select>
     <label class="check"><input type="checkbox" name="cancelados" value="true" th:checked="${cancelados}"> Mostrar cancelados</label>
   </form>
 

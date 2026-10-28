@@ -106,6 +106,7 @@ header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-con
 .alert.error::before{background:var(--out)}
 @keyframes alertIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .form{display:grid;gap:12px}
+[hidden]{display:none!important}
 .field{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
 .field input,.field select{font-weight:400}
 input[readonly]{background:var(--bg);color:var(--muted)}

@@ -27,7 +27,7 @@ public class FondoRepository {
     private static final RowMapper<Movimiento> MOVIMIENTO = new DataClassRowMapper<>(Movimiento.class);
 
     private static final String SELECT_MOVIMIENTOS = """
-            SELECT m.id, m.tipo, m.grupo_id, g.nombre AS grupo_nombre, n.nombre AS nino,
+            SELECT m.id, m.tipo, m.grupo_id, g.nombre AS grupo_nombre, n.nombre AS nino, m.evento,
                    m.concepto, m.monto, m.fecha, m.registrado_por, m.comprobante,
                    m.cancelado, m.motivo_cancelacion, m.cancelado_por
               FROM movimiento m
@@ -60,10 +60,11 @@ public class FondoRepository {
     /**
      * @param tipo              INGRESO, EGRESO o null para ambos
      * @param grupo             A, B, C, COMUN (fondo común) o null para todos
+     * @param evento            nombre del evento o null para todos
      * @param incluirCancelados si false, oculta los cancelados
      * @param limite            máximo de renglones o null para todos
      */
-    public List<Movimiento> movimientos(String tipo, String grupo, boolean incluirCancelados, Integer limite) {
+    public List<Movimiento> movimientos(String tipo, String grupo, String evento, boolean incluirCancelados, Integer limite) {
         StringBuilder sql = new StringBuilder(SELECT_MOVIMIENTOS);
         List<Object> args = new ArrayList<>();
 
@@ -76,6 +77,10 @@ public class FondoRepository {
         } else if (grupo != null) {
             sql.append(" AND m.grupo_id = ?");
             args.add(grupo);
+        }
+        if (evento != null) {
+            sql.append(" AND m.evento = ?");
+            args.add(evento);
         }
         if (!incluirCancelados) {
             sql.append(" AND m.cancelado = FALSE");
@@ -113,12 +118,12 @@ public class FondoRepository {
                 new DataClassRowMapper<>(Nino.class), grupoId);
     }
 
-    public void insertarMovimiento(String tipo, String grupoId, Integer ninoId, String concepto,
+    public void insertarMovimiento(String tipo, String grupoId, Integer ninoId, String evento, String concepto,
                                    BigDecimal monto, LocalDate fecha, String registradoPor, String comprobante) {
         jdbc.update("""
-                INSERT INTO movimiento (tipo, grupo_id, nino_id, concepto, monto, fecha, registrado_por, comprobante)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, tipo, grupoId, ninoId, concepto, monto, fecha, registradoPor, comprobante);
+                INSERT INTO movimiento (tipo, grupo_id, nino_id, evento, concepto, monto, fecha, registrado_por, comprobante)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, tipo, grupoId, ninoId, evento, concepto, monto, fecha, registradoPor, comprobante);
     }
 
     public Optional<Movimiento> movimientoPorId(int id) {

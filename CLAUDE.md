@@ -71,22 +71,25 @@ db/datos-ejemplo.sql         ← datos de prueba; se corre UNA vez a mano en la 
 - **movimiento**: ingresos y gastos en una sola tabla.
   - `tipo`: `INGRESO` | `EGRESO`
   - `grupo_id`: grupo del movimiento; **NULL = fondo común** (pagos de la graduación)
-  - `nino_id`: opcional, solo para ingresos, debe ser del mismo grupo (FK compuesta)
-  - `concepto`: en ingresos siempre `'Fondo de graduación'`; en gastos texto libre
+  - `nino_id`: solo para ingresos, debe ser del mismo grupo (FK compuesta)
+  - `evento`: solo ingresos sin niño (`FondoService.EVENTOS`, hoy solo 'Halloween').
+    Todo ingreso lleva **exactamente uno** de `nino_id` o `evento` (CHECK `ck_nino_evento`)
+  - `concepto`: en ingresos `'Fondo de graduación'`, `'Halloween'`, `'Rifa 1 (Diciembre)'` o `'Rifa 2 (Febrero)'` (`FondoService.CONCEPTOS`); en gastos texto libre
   - `monto`, `fecha`, `registrado_por` (nombre del vocal), `comprobante` (nombre de archivo)
   - `cancelado`, `motivo_cancelacion`, `cancelado_por`
 - **Vistas** (excluyen cancelados): `v_total_grupo`, `v_total_general`, `v_total_nino`.
 
 `schema.sql` debe seguir siendo **idempotente**: `CREATE TABLE IF NOT EXISTS`,
-`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `CREATE OR REPLACE VIEW`. Nunca `DROP` ni datos ahí.
+`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `CREATE OR REPLACE VIEW`. Nunca `DROP` de tablas/columnas
+ni datos ahí. Para cambiar un CHECK: `DROP CONSTRAINT IF EXISTS` + `ADD CONSTRAINT` (como `ck_ingreso`).
 
 ## Reglas de negocio
 
 1. **Todo es visible para todos** (transparencia). Consultar no pide login.
 2. **Un vocal por grupo.** El vocal logueado solo registra en su grupo; su nombre y grupo salen de
    la sesión (`Principal`), nunca de un campo del formulario.
-3. **Ingresos**: concepto fijo "Fondo de graduación", monto **solo $500 o $1,000**
-   (`FondoService.MONTOS`, y CHECK en BD), niño opcional, fecha = hoy.
+3. **Ingresos**: concepto de la lista `FondoService.CONCEPTOS` (mismo listado en el CHECK `ck_ingreso`).
+   Monto: $500, $1,000 (`FondoService.MONTOS`) u "otra cantidad" > 0. Niño **o** evento (uno obligatorio), fecha = hoy.
 4. **Gastos**: del grupo del vocal o del **fondo común** (pagos de la graduación). Concepto libre,
    monto > 0, fecha, comprobante opcional (PDF o foto).
 5. **Totales**: total por grupo = ingresos − gastos del grupo.

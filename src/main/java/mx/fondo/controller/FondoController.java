@@ -81,13 +81,16 @@ public class FondoController {
     @GetMapping("/movimientos")
     public String movimientos(@RequestParam(required = false) String tipo,
                               @RequestParam(required = false) String grupo,
+                              @RequestParam(required = false) String evento,
                               @RequestParam(defaultValue = "false") boolean cancelados,
                               Principal principal,
                               Model model) {
-        model.addAttribute("movimientos", service.movimientos(tipo, grupo, cancelados));
+        model.addAttribute("movimientos", service.movimientos(tipo, grupo, evento, cancelados));
         model.addAttribute("grupos", service.grupos());
+        model.addAttribute("eventos", FondoService.EVENTOS);
         model.addAttribute("tipo", tipo);
         model.addAttribute("grupo", grupo);
+        model.addAttribute("evento", evento);
         model.addAttribute("cancelados", cancelados);
         if (principal != null) {
             model.addAttribute("vocal", service.vocal(principal.getName()));
@@ -120,17 +123,22 @@ public class FondoController {
         model.addAttribute("vocal", vocal);
         model.addAttribute("ninos", service.ninosDelGrupo(vocal.grupoId()));
         model.addAttribute("montos", FondoService.MONTOS);
-        model.addAttribute("concepto", FondoService.CONCEPTO);
+        model.addAttribute("conceptos", FondoService.CONCEPTOS);
+        model.addAttribute("eventos", FondoService.EVENTOS);
         return "ingreso-form";
     }
 
     @PostMapping("/ingresos")
     public String registrarIngreso(Principal principal,
                                    @RequestParam(required = false) Integer ninoId,
-                                   @RequestParam BigDecimal monto,
+                                   @RequestParam(required = false) String evento,
+                                   @RequestParam String concepto,
+                                   @RequestParam(required = false) BigDecimal monto,
+                                   @RequestParam(required = false) BigDecimal otroMonto,
                                    RedirectAttributes redirect) {
         try {
-            service.registrarIngreso(principal.getName(), ninoId, monto);
+            // En el combo "Otra cantidad" manda monto vacío y el valor viene en otroMonto
+            service.registrarIngreso(principal.getName(), ninoId, evento, concepto, monto != null ? monto : otroMonto);
             redirect.addFlashAttribute("ok", "Ingreso registrado.");
             return "redirect:/?tab=movimientos";
         } catch (IllegalArgumentException | DataIntegrityViolationException e) {

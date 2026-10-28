@@ -10,6 +10,7 @@ public record Movimiento(
         String grupoId,           // null = fondo común
         String grupoNombre,
         String nino,
+        String evento,            // solo ingresos sin niño
         String concepto,
         BigDecimal monto,
         LocalDate fecha,

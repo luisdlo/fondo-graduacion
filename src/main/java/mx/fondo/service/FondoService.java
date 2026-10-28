@@ -27,7 +27,11 @@ public class FondoService {
 
     private static final Set<String> TIPOS = Set.of("INGRESO", "EGRESO");
 
-    public static final String CONCEPTO = "Fondo de graduación";
+    public static final List<String> CONCEPTOS = List.of(
+            "Fondo de graduación", "Halloween", "Rifa 1", "Rifa 2");
+    /** Eventos para ingresos que no son de un niño. */
+    public static final List<String> EVENTOS = List.of("Halloween");
+    /** Montos sugeridos en el combo; también se puede capturar "otra cantidad". */
     public static final List<BigDecimal> MONTOS = List.of(new BigDecimal("500"), new BigDecimal("1000"));
 
     /** Carpeta de comprobantes junto a la BD (ruta absoluta para que el upload no caiga en /tmp). */
@@ -53,10 +57,12 @@ public class FondoService {
         return repository.totalGeneral();
     }
 
-    public List<Movimiento> movimientos(String tipo, String grupo, boolean incluirCancelados) {
+    public List<Movimiento> movimientos(String tipo, String grupo, String evento, boolean incluirCancelados) {
         String tipoValido = (tipo != null && TIPOS.contains(tipo)) ? tipo : null;
         String grupoValido = (grupo == null || grupo.isBlank()) ? null : grupo;
-        return repository.movimientos(tipoValido, grupoValido, incluirCancelados, null);
+        // Ojo: List.of(...).contains(null) lanza NPE, por eso se revisa null primero
+        String eventoValido = (evento != null && EVENTOS.contains(evento)) ? evento : null;
+        return repository.movimientos(tipoValido, grupoValido, eventoValido, incluirCancelados, null);
     }
 
     // ---------- Registro (el vocal sale del login) ----------
@@ -75,12 +81,21 @@ public class FondoService {
     }
 
     /** Ingreso al fondo del grupo del vocal. El niño es opcional. */
-    public void registrarIngreso(String usuario, Integer ninoId, BigDecimal monto) {
+    public void registrarIngreso(String usuario, Integer ninoId, String evento, String concepto, BigDecimal monto) {
         Vocal vocal = vocal(usuario);
-        if (monto == null || MONTOS.stream().noneMatch(m -> m.compareTo(monto) == 0)) {
-            throw new IllegalArgumentException("El monto solo puede ser $500 o $1,000.");
+        if (!CONCEPTOS.contains(concepto)) {
+            throw new IllegalArgumentException("Elige un concepto válido.");
         }
-        repository.insertarMovimiento("INGRESO", vocal.grupoId(), ninoId, CONCEPTO,
+        // Siempre va ligado a un niño o, si no hay niño, a un evento
+        if (ninoId != null) {
+            evento = null;
+        } else if (evento == null || !EVENTOS.contains(evento)) {
+            throw new IllegalArgumentException("Elige el niño o el evento.");
+        }
+        if (monto == null || monto.signum() <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor a cero.");
+        }
+        repository.insertarMovimiento("INGRESO", vocal.grupoId(), ninoId, evento, concepto,
                 monto, LocalDate.now(), vocal.nombre(), null);
     }
 
@@ -95,7 +110,7 @@ public class FondoService {
             throw new IllegalArgumentException("El monto debe ser mayor a cero.");
         }
         String archivo = guardarComprobante(comprobante);
-        repository.insertarMovimiento("EGRESO", fondoComun ? null : vocal.grupoId(), null, concepto.trim(),
+        repository.insertarMovimiento("EGRESO", fondoComun ? null : vocal.grupoId(), null, null, concepto.trim(),
                 monto, fecha != null ? fecha : LocalDate.now(), vocal.nombre(), archivo);
     }
 
