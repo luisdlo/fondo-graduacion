@@ -72,9 +72,9 @@ db/datos-ejemplo.sql         ← datos de prueba; se corre UNA vez a mano en la 
   - `tipo`: `INGRESO` | `EGRESO`
   - `grupo_id`: grupo del movimiento; **NULL = fondo común** (pagos de la graduación)
   - `nino_id`: solo para ingresos, debe ser del mismo grupo (FK compuesta)
-  - `evento`: solo ingresos sin niño (`FondoService.EVENTOS`, hoy solo 'Halloween').
+  - `evento`: solo ingresos sin niño (`FondoService.EVENTOS`, hoy 'Halloween' y 'Cabina de fotos').
     Todo ingreso lleva **exactamente uno** de `nino_id` o `evento` (CHECK `ck_nino_evento`)
-  - `concepto`: en ingresos `'Fondo de graduación'`, `'Halloween'`, `'Rifa 1 (Diciembre)'` o `'Rifa 2 (Febrero)'` (`FondoService.CONCEPTOS`); en gastos texto libre
+  - `concepto`: en ingresos `'Fondo de graduación'`, `'Halloween'`, `'Rifa 1'`, `'Rifa 2'` o `'Cabina de fotos'` (`FondoService.CONCEPTOS`); en gastos texto libre
   - `monto`, `fecha`, `registrado_por` (nombre del vocal), `comprobante` (nombre de archivo)
   - `cancelado`, `motivo_cancelacion`, `cancelado_por`
 - **Vistas** (excluyen cancelados): `v_total_grupo`, `v_total_general`, `v_total_nino`.

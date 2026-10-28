@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS movimiento (
   CONSTRAINT ck_tipo        CHECK (tipo IN ('INGRESO', 'EGRESO')),
   CONSTRAINT ck_monto       CHECK (monto > 0),
   -- Ingresos: siempre de un grupo y con uno de los conceptos permitidos (ver ck_ingreso abajo)
-  CONSTRAINT ck_ingreso     CHECK (tipo = 'EGRESO' OR (grupo_id IS NOT NULL AND concepto IN ('Fondo de graduación', 'Halloween', 'Rifa 1 (Diciembre)', 'Rifa 2 (Febrero)'))),
+  CONSTRAINT ck_ingreso     CHECK (tipo = 'EGRESO' OR (grupo_id IS NOT NULL AND concepto IN ('Fondo de graduación', 'Halloween', 'Rifa 1', 'Rifa 2', 'Cabina de fotos'))),
   -- El niño solo aplica a ingresos
   CONSTRAINT ck_nino        CHECK (nino_id IS NULL OR tipo = 'INGRESO'),
   -- Cancelar exige motivo y quién
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS movimiento (
 -- por el actual. Idempotente: se puede correr en cada arranque.
 ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS ck_ingreso;
 ALTER TABLE movimiento ADD CONSTRAINT ck_ingreso
-  CHECK (tipo = 'EGRESO' OR (grupo_id IS NOT NULL AND concepto IN ('Fondo de graduación', 'Halloween', 'Rifa 1 (Diciembre)', 'Rifa 2 (Febrero)')));
+  CHECK (tipo = 'EGRESO' OR (grupo_id IS NOT NULL AND concepto IN ('Fondo de graduación', 'Halloween', 'Rifa 1', 'Rifa 2', 'Cabina de fotos')));
 
 -- Evento del ingreso cuando no es de un niño (la lista vive en FondoService.EVENTOS).
 ALTER TABLE movimiento ADD COLUMN IF NOT EXISTS evento VARCHAR(100);

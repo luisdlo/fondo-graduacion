@@ -40,7 +40,7 @@ Se actualiza sola cada minuto.
 La lista completa de todo lo que ha entrado y salido, del más reciente al más antiguo. Se puede filtrar por:
 - Tipo: ingresos, gastos o ambos.
 - Grupo: A, B, C o fondo común.
-- Evento: todos o uno en específico (por ahora Halloween).
+- Evento: todos o uno en específico (Halloween o Cabina de fotos).
 - Mostrar u ocultar los cancelados.
 
 Cada movimiento muestra:
@@ -60,9 +60,9 @@ la opción **Salir**.
 
 ### + Ingreso
 Para registrar dinero que entra al fondo del grupo.
-- **Concepto**: "Fondo de graduación", "Halloween", "Rifa 1 (Diciembre)" o "Rifa 2 (Febrero)".
+- **Concepto**: "Fondo de graduación", "Halloween", "Rifa 1", "Rifa 2" o "Cabina de fotos".
 - **Niño**: se elige de los niños del grupo del vocal. Si se deja "Sin niño", aparece el combo
-  **Evento** (por ahora solo "Halloween") y es obligatorio: todo ingreso es de un niño o de un evento.
+  **Evento** ("Halloween" o "Cabina de fotos") y es obligatorio: todo ingreso es de un niño o de un evento.
 - **Monto**: **$500**, **$1,000** u **Otra cantidad** (se escribe a mano, mayor a cero).
 - **Fecha**: se pone sola, la de hoy.
 
@@ -89,7 +89,7 @@ Después de guardar aparece un aviso de confirmación, o de error si algo no es 
 - **Nada se borra.** Si un registro está mal, se **cancela**: queda tachado y visible, con el motivo y
   quién lo canceló.
 - Cada vocal solo puede registrar en **su** grupo.
-- Los ingresos solo aceptan los conceptos de la lista (Fondo de graduación, Halloween, Rifa 1 y Rifa 2). La base de datos también
+- Los ingresos solo aceptan los conceptos de la lista (Fondo de graduación, Halloween, Rifa 1, Rifa 2 y Cabina de fotos). La base de datos también
   lo valida, así que ni capturando a mano se puede meter otro concepto.
 - Un niño solo puede tener ingresos en el grupo al que pertenece.
 

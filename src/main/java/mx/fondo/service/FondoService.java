@@ -28,9 +28,9 @@ public class FondoService {
     private static final Set<String> TIPOS = Set.of("INGRESO", "EGRESO");
 
     public static final List<String> CONCEPTOS = List.of(
-            "Fondo de graduación", "Halloween", "Rifa 1", "Rifa 2");
+            "Fondo de graduación", "Halloween", "Rifa 1", "Rifa 2", "Cabina de fotos");
     /** Eventos para ingresos que no son de un niño. */
-    public static final List<String> EVENTOS = List.of("Halloween");
+    public static final List<String> EVENTOS = List.of("Halloween", "Cabina de fotos");
     /** Montos sugeridos en el combo; también se puede capturar "otra cantidad". */
     public static final List<BigDecimal> MONTOS = List.of(new BigDecimal("500"), new BigDecimal("1000"));
 
