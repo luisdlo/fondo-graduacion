@@ -150,26 +150,35 @@ Cuando tengas dominio apuntado con un A record al IP del VPS:
 Caddy pide el certificado a Let's Encrypt automáticamente y lo renueva
 para siempre. Cero configuración adicional.
 
-## Consola H2 en producción
+## Acceso a la BD en producción
 
-Está **apagada por defecto** en el compose
-(`SPRING_H2_CONSOLE_ENABLED=false`) porque expone la BD a quien tenga
-la URL. Si necesitas correr SQL directo puntualmente:
+Las tres opciones usan la **misma BD real** (salvo la C). Lo que se cambie se aplica en
+producción: respalda antes de editar.
 
-Opción A — encender temporal:
+**Opción A — Consola H2 en el navegador** (ya encendida, protegida por Caddy con basic auth):
 
-```bash
-# En docker-compose.yml pon SPRING_H2_CONSOLE_ENABLED: "true"
-docker compose up -d app
-# Accede vía SSH tunnel para no exponer al mundo:
-ssh -L 8080:localhost:8080 root@TU_IP
-# En tu navegador local: http://localhost:8080/h2
-# JDBC URL: jdbc:h2:file:/opt/fondo/data/fondo   (ruta dentro del contenedor, no del VPS)
-# User: sa   Password: (vacío)
-# Al terminar, vuelve a false y reinicia.
+```
+https://fondo-ingles.ddns.net/h2        (usuario admin + password de Dozzle)
+JDBC URL: jdbc:h2:file:/opt/fondo/data/fondo   (ruta dentro del contenedor, no del VPS)
+User: sa   Password: (vacío)
 ```
 
-Opción B — bajar la BD a local (más seguro) y usar la consola H2 local.
+**Opción B — IntelliJ / DataGrip en vivo** (servidor TCP de H2 en el 9092, solo en localhost del VPS):
+
+```bash
+# En tu Mac, deja esta terminal abierta mientras uses IntelliJ
+ssh -N -L 9092:localhost:9092 root@TU_IP
+# IntelliJ → Data Source H2 → Connection type: Remote
+# URL:  jdbc:h2:tcp://localhost:9092//opt/fondo/data/fondo   (doble / antes de opt)
+# User: sa   Password: (vacío)   Driver: H2 2.2.224 (la misma versión que la app)
+```
+
+El servidor TCP lo levanta la app (`FondoApplication`) solo si existe `FONDO_H2_TCP_PORT`
+(definido en `docker-compose.yml`). El puerto se publica como `127.0.0.1:9092:9092`:
+**nunca** quitar el `127.0.0.1`, la BD usa `sa` sin password y quedaría abierta a internet.
+Para verificarlo en el VPS: `ss -ltnp | grep 9092` debe mostrar `127.0.0.1:9092`.
+
+**Opción C — Bajar una copia a local** (sin riesgo; ver "Backup / bajar la BD a local").
 
 ## Comandos útiles
 

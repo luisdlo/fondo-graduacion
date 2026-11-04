@@ -142,6 +142,9 @@ spring.h2.console.path=/h2
   (la consola trae `jdbc:h2:~/test` por default y hay que cambiarla).
 - Comprobantes: se guardan en `./data/comprobantes` (ruta absoluta en `FondoService.COMPROBANTES`)
   y se sirven en `/comprobantes/{nombre}`.
+- BD del VPS en vivo desde IntelliJ: servidor TCP de H2 en `FondoApplication` (solo si existe
+  `fondo.h2.tcp-port`; en el VPS `FONDO_H2_TCP_PORT=9092`, publicado en `127.0.0.1`). Se entra con
+  túnel SSH; ver `README-PROD.md`.
 - Alta de vocales (manual en la consola):
   `UPDATE grupo SET usuario = 'laura', password = 'cambiar123' WHERE id = 'A';`
 
