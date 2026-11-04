@@ -92,10 +92,10 @@ ni datos ahí. Para cambiar un CHECK: `DROP CONSTRAINT IF EXISTS` + `ADD CONSTRA
 1. **Todo es visible para todos** (transparencia). Consultar no pide login.
 2. **Un vocal por grupo.** El vocal logueado solo registra en su grupo; su nombre y grupo salen de
    la sesión (`Principal`), nunca de un campo del formulario.
-3. **Ingresos**: el vocal elige *Aportación de alumno* (niño de su grupo, suma a su grupo) o *Evento*
+3. **Ingresos**: el vocal elige *Alumno* (niño de su grupo, suma a su grupo) o *Evento*
    (sin niño, suma a la bolsa Eventos). Concepto del catálogo. Monto: $500, $1,000 (`FondoService.MONTOS`)
    u "otra cantidad" > 0. Fecha = hoy.
-4. **Gastos**: del grupo del vocal o de un evento. Concepto del catálogo, monto > 0, fecha,
+4. **Gastos**: *Alumno* (del grupo del vocal) o *Evento*. Concepto del catálogo, monto > 0, fecha,
    comprobante opcional (PDF o foto).
 5. **Totales**: total por grupo = ingresos − gastos del grupo; total por evento igual.
    Total general = grupos + eventos − pagos de la graduación.

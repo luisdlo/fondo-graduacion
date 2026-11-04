@@ -5,16 +5,24 @@
   <p class="meta" style="margin:-4px 0 12px" th:text="|Registra ${vocal.nombre} · fecha de hoy|"></p>
 
   <form class="form" th:action="@{/ingresos}" method="post">
-    <div class="radio-row"
+    <p class="pick-label">¿A dónde va el ingreso?</p>
+    <div class="bolsa-pick" role="radiogroup" aria-label="¿A dónde va el ingreso?"
          onchange="const ev = this.querySelector('input:checked').value === 'EVENTO';
                    const f = this.closest('form'); f.querySelector('#ing-grupo').disabled = f.querySelector('#ing-grupo').hidden = ev;
                    f.querySelector('#ing-evento').disabled = f.querySelector('#ing-evento').hidden = !ev;">
-      <label><input type="radio" name="bolsa" value="GRUPO" checked> Aportación de alumno</label>
-      <label><input type="radio" name="bolsa" value="EVENTO"> Evento</label>
+      <label class="bolsa-opt" th:style="|--acc:var(--g${vocal.grupoId})|">
+        <input type="radio" name="bolsa" value="GRUPO" checked>
+        <span class="bolsa-ico" aria-hidden="true">🎒</span>
+        <span class="bolsa-txt"><strong>Alumno</strong><small th:text="${vocal.grupoNombre}">Grupo A</small></span>
+      </label>
+      <label class="bolsa-opt" style="--acc:var(--gE)">
+        <input type="radio" name="bolsa" value="EVENTO">
+        <span class="bolsa-ico" aria-hidden="true">🎉</span>
+        <span class="bolsa-txt"><strong>Evento</strong></span>
+      </label>
     </div>
 
     <fieldset id="ing-grupo" class="bolsa">
-      <p class="hint" th:text="|Se suma al ${vocal.grupoNombre}|"></p>
       <label class="field">Niño
         <select name="ninoId" required>
           <option value="">— Elige al niño —</option>
@@ -30,7 +38,6 @@
     </fieldset>
 
     <fieldset id="ing-evento" class="bolsa" hidden disabled>
-      <p class="hint">Se suma a la bolsa de Eventos (de los tres grupos)</p>
       <label class="field">Evento
         <select name="evento" required>
           <option value="">— Elige el evento —</option>

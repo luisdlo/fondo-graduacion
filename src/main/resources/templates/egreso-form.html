@@ -5,16 +5,24 @@
   <p class="meta" style="margin:-4px 0 12px" th:text="|Registra ${vocal.nombre}|"></p>
 
   <form class="form" th:action="@{/egresos}" method="post" enctype="multipart/form-data">
-    <div class="radio-row"
+    <p class="pick-label">¿De dónde sale el gasto?</p>
+    <div class="bolsa-pick" role="radiogroup" aria-label="¿De dónde sale el gasto?"
          onchange="const ev = this.querySelector('input:checked').value === 'EVENTO';
                    const f = this.closest('form'); f.querySelector('#egr-grupo').disabled = f.querySelector('#egr-grupo').hidden = ev;
                    f.querySelector('#egr-evento').disabled = f.querySelector('#egr-evento').hidden = !ev;">
-      <label><input type="radio" name="bolsa" value="GRUPO" checked> <span th:text="|Mi grupo (${vocal.grupoNombre})|">Mi grupo</span></label>
-      <label><input type="radio" name="bolsa" value="EVENTO"> Evento</label>
+      <label class="bolsa-opt" th:style="|--acc:var(--g${vocal.grupoId})|">
+        <input type="radio" name="bolsa" value="GRUPO" checked>
+        <span class="bolsa-ico" aria-hidden="true">🎒</span>
+        <span class="bolsa-txt"><strong>Alumno</strong><small th:text="${vocal.grupoNombre}">Grupo A</small></span>
+      </label>
+      <label class="bolsa-opt" style="--acc:var(--gE)">
+        <input type="radio" name="bolsa" value="EVENTO">
+        <span class="bolsa-ico" aria-hidden="true">🎉</span>
+        <span class="bolsa-txt"><strong>Evento</strong></span>
+      </label>
     </div>
 
     <fieldset id="egr-grupo" class="bolsa">
-      <p class="hint" th:text="|Se resta al ${vocal.grupoNombre}|"></p>
       <label class="field">Concepto
         <select name="concepto" required>
           <option value="">— Elige el concepto —</option>
@@ -24,7 +32,6 @@
     </fieldset>
 
     <fieldset id="egr-evento" class="bolsa" hidden disabled>
-      <p class="hint">Se resta a la bolsa de Eventos (de los tres grupos)</p>
       <label class="field">Evento
         <select name="evento" required>
           <option value="">— Elige el evento —</option>

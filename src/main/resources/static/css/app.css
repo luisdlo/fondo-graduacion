@@ -195,15 +195,33 @@ footer{color:var(--muted);font-size:12px;margin:24px 0 8px;text-align:center}
   .form-actions .btn{width:100%;min-width:0}
 }
 
-/* Selector de bolsa en formularios (alumno/grupo o evento) */
-.radio-row{display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
-.radio-row label{display:flex;gap:6px;align-items:center;font-weight:500}
-.radio-row input{width:auto}
+/* Selector de bolsa en formularios: dos tarjetas grandes (Alumno / Evento), pensadas para el dedo.
+   El radio va escondido; la tarjeta elegida toma el color de su bolsa (--acc). */
+.pick-label{margin:0 0 -4px;font-size:13px;font-weight:600;color:var(--muted)}
+.bolsa-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bolsa-opt{position:relative;display:flex;flex-direction:column;gap:8px;padding:12px;min-height:96px;
+  border:2px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:border-color .15s, background .15s, transform .1s}
+.bolsa-opt input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.bolsa-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:var(--bg);transition:background .15s}
+.bolsa-txt strong{display:block;font-size:16px;color:var(--text)}
+.bolsa-txt small{display:block;margin-top:2px;font-size:12px;line-height:1.3;color:var(--muted)}
+/* Palomita en la esquina */
+.bolsa-opt::after{content:"";position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:99px;
+  border:2px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--on-color)}
+.bolsa-opt:has(input:checked){border-color:var(--acc);background:color-mix(in srgb, var(--acc) 10%, var(--card))}
+.bolsa-opt:has(input:checked) .bolsa-ico{background:color-mix(in srgb, var(--acc) 22%, var(--card))}
+.bolsa-opt:has(input:checked)::after{content:"✓";background:var(--acc);border-color:var(--acc)}
+.bolsa-opt:has(input:focus-visible){outline:2px solid var(--acc);outline-offset:2px}
+.bolsa-opt:active{transform:scale(.97)}
 fieldset.bolsa{border:0;padding:0;margin:0;display:grid;gap:12px;min-width:0}
 fieldset.bolsa[hidden]{display:none}
+@media (max-width:380px){
+  .bolsa-opt{padding:10px;min-height:88px}
+  .bolsa-ico{width:34px;height:34px;font-size:19px}
+  .bolsa-txt strong{font-size:15px}
+}
 
-/* Desglose por evento en la Consulta */
-.desglose{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
-.desglose th,.desglose td{padding:4px 6px;text-align:right;border-top:1px solid var(--line)}
-.desglose th:first-child,.desglose td:first-child{text-align:left}
-.desglose th{font-weight:600;color:var(--muted)}
+/* Renglones por evento dentro de la tarjeta de Eventos (Consulta) */
+.evs{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+.evs .row{font-size:12px;color:var(--muted);padding:2px 0}

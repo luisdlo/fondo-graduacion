@@ -57,6 +57,9 @@ CREATE TABLE IF NOT EXISTS evento (
   nombre VARCHAR(100) PRIMARY KEY            -- 'Halloween', 'Patinada', 'Rifa 1', ...
 );
 
+-- Halloween va desde el inicio (los movimientos viejos sin evento y los de la cabina de fotos caen ahí).
+MERGE INTO evento KEY (nombre) VALUES ('Halloween');
+
 -- Conceptos permitidos según tipo y bolsa. Ej.: ('Compra de juguetes', 'EGRESO', 'EVENTO')
 CREATE TABLE IF NOT EXISTS concepto (
   nombre VARCHAR(150) NOT NULL,
@@ -84,15 +87,21 @@ UPDATE movimiento SET evento = 'Halloween'
 UPDATE movimiento SET grupo_id = NULL
  WHERE evento IS NOT NULL AND grupo_id IS NOT NULL;
 
+-- La cabina de fotos no es un evento: fue parte de Halloween (queda como concepto).
+UPDATE movimiento SET evento = 'Halloween', concepto = 'Cabina de fotos'
+ WHERE evento = 'Cabina de fotos';
+
 -- Eventos que ya se usan en movimientos (para que la FK no truene). Los nuevos se dan de alta a mano.
 INSERT INTO evento (nombre)
 SELECT DISTINCT evento FROM movimiento
  WHERE evento IS NOT NULL AND evento NOT IN (SELECT nombre FROM evento);
 
--- Concepto mínimo para poder registrar aportaciones; el resto se da de alta a mano.
-INSERT INTO concepto (nombre, tipo, bolsa)
-SELECT 'Fondo de graduación', 'INGRESO', 'GRUPO'
- WHERE NOT EXISTS (SELECT 1 FROM concepto);
+-- Conceptos iniciales; el resto se da de alta a mano. MERGE solo agrega los que falten
+-- (ojo: si se borra uno de estos a mano, vuelve a aparecer en el siguiente arranque).
+MERGE INTO concepto KEY (nombre, tipo, bolsa) VALUES
+  ('Fondo de graduación',                            'INGRESO', 'GRUPO'),
+  ('Cabina de fotos',                                'INGRESO', 'EVENTO'),
+  ('Artículos de venta en la patinada de Halloween', 'EGRESO',  'EVENTO');
 
 -- Ingreso: exactamente uno de niño (grupo) o evento. Gasto: nunca niño.
 ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS ck_nino_evento;

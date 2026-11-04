@@ -10,37 +10,6 @@
   </div>
 </div>
 
-<!-- Bolsa de Eventos: es de los tres grupos. Total y desglose por evento. -->
-<div class="card mt"
-     th:with="ing=${#aggregates.sum(eventos.![ingresos])}, gas=${#aggregates.sum(eventos.![gastos])}"
-     th:classappend="${logueado} ? 'card-link'"
-     th:hx-get="${logueado} ? @{/movimientos(grupo='EVENTOS', cancelados=true)}"
-     hx-target="#panel"
-     th:title="${logueado} ? 'Ver movimientos de eventos'"
-     onclick="document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('active', x.textContent.trim() === 'Movimientos'));">
-  <div class="row" style="padding:0 0 8px">
-    <span class="pill g-EVENTO">Eventos</span>
-    <span class="muted">De los tres grupos</span>
-  </div>
-  <div class="row"><span class="muted">Ingresos</span>
-    <span class="pos"><span th:replace="~{fragments :: money(${ing ?: 0})}"></span></span></div>
-  <div class="row"><span class="muted">Gastos</span>
-    <span class="neg"><span th:replace="~{fragments :: money(${gas ?: 0})}"></span></span></div>
-  <div class="row"><strong>Aporta al fondo</strong>
-    <strong><span th:replace="~{fragments :: money(${general.totalEventos})}"></span></strong></div>
-
-  <table class="desglose" th:unless="${eventos.isEmpty()}">
-    <tr><th>Evento</th><th>Ingresos</th><th>Gastos</th><th>Total</th></tr>
-    <tr th:each="e : ${eventos}">
-      <td th:text="${e.evento}">Halloween</td>
-      <td class="pos"><span th:replace="~{fragments :: money(${e.ingresos})}"></span></td>
-      <td class="neg"><span th:replace="~{fragments :: money(${e.gastos})}"></span></td>
-      <td><strong><span th:replace="~{fragments :: money(${e.total})}"></span></strong></td>
-    </tr>
-  </table>
-  <div class="go" th:if="${logueado}">Ver movimientos →</div>
-</div>
-
 <div class="grid mt">
   <!-- Solo con sesión la tarjeta lleva a Movimientos (si no, th:hx-get queda en null y no se pinta) -->
   <div class="card" th:each="g : ${grupos}"
@@ -59,6 +28,32 @@
       <span class="neg"><span th:replace="~{fragments :: money(${g.gastos})}"></span></span></div>
     <div class="row"><strong>Aporta al fondo</strong>
       <strong><span th:replace="~{fragments :: money(${g.total})}"></span></strong></div>
+    <div class="go" th:if="${logueado}">Ver movimientos →</div>
+  </div>
+  <!-- Bolsa de Eventos: es de los tres grupos. Misma tarjeta que los grupos, al final, con un renglón chico por evento. -->
+  <div class="card"
+       th:with="ing=${#aggregates.sum(eventos.![ingresos])}, gas=${#aggregates.sum(eventos.![gastos])}"
+       th:classappend="${logueado} ? 'card-link'"
+       th:hx-get="${logueado} ? @{/movimientos(grupo='EVENTOS', cancelados=true)}"
+       hx-target="#panel"
+       th:title="${logueado} ? 'Ver movimientos de eventos'"
+       onclick="document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('active', x.textContent.trim() === 'Movimientos'));">
+    <div class="row" style="padding:0 0 8px">
+      <span class="pill g-EVENTO">Eventos</span>
+      <span class="muted">De los 3 grupos</span>
+    </div>
+    <div class="row"><span class="muted">Ingresos</span>
+      <span class="pos"><span th:replace="~{fragments :: money(${ing ?: 0})}"></span></span></div>
+    <div class="row"><span class="muted">Gastos</span>
+      <span class="neg"><span th:replace="~{fragments :: money(${gas ?: 0})}"></span></span></div>
+    <div class="row"><strong>Aporta al fondo</strong>
+      <strong><span th:replace="~{fragments :: money(${general.totalEventos})}"></span></strong></div>
+    <div class="evs" th:unless="${eventos.isEmpty()}">
+      <div class="row" th:each="e : ${eventos}">
+        <span th:text="${e.evento}">Halloween</span>
+        <span th:replace="~{fragments :: money(${e.total})}"></span>
+      </div>
+    </div>
     <div class="go" th:if="${logueado}">Ver movimientos →</div>
   </div>
 </div>
