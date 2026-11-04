@@ -7,10 +7,10 @@ import java.time.LocalDate;
 public record Movimiento(
         Integer id,
         String tipo,              // INGRESO | EGRESO
-        String grupoId,           // null = fondo común
+        String grupoId,           // null = evento o pago de la graduación
         String grupoNombre,
         String nino,
-        String evento,            // solo ingresos sin niño
+        String evento,            // bolsa Eventos (ingreso o gasto)
         String concepto,
         BigDecimal monto,
         LocalDate fecha,
@@ -24,11 +24,15 @@ public record Movimiento(
         return "INGRESO".equals(tipo);
     }
 
+    public boolean esEvento() {
+        return evento != null;
+    }
+
     public String grupoEtiqueta() {
-        return grupoId == null ? "Fondo común" : grupoNombre;
+        return esEvento() ? "Eventos" : grupoId == null ? "Pago graduación" : grupoNombre;
     }
 
     public String pillClass() {
-        return "g-" + (grupoId == null ? "COMUN" : grupoId);
+        return "g-" + (esEvento() ? "EVENTO" : grupoId == null ? "COMUN" : grupoId);
     }
 }

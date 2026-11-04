@@ -12,7 +12,7 @@
     <select name="grupo">
       <option value="" th:selected="${grupo == null or grupo == ''}">Todos los grupos</option>
       <option th:each="g : ${grupos}" th:value="${g.id}" th:text="${g.nombre}" th:selected="${grupo == g.id}">Grupo A</option>
-      <option value="COMUN" th:selected="${grupo == 'COMUN'}">Fondo común (graduación)</option>
+      <option value="EVENTOS" th:selected="${grupo == 'EVENTOS'}">Eventos</option>
     </select>
     <select name="evento">
       <option value="" th:selected="${evento == null or evento == ''}">Todos los eventos</option>

@@ -3,6 +3,7 @@ package mx.fondo.repository;
 import mx.fondo.model.Grupo;
 import mx.fondo.model.Movimiento;
 import mx.fondo.model.Nino;
+import mx.fondo.model.TotalEvento;
 import mx.fondo.model.TotalGeneral;
 import mx.fondo.model.TotalGrupo;
 import mx.fondo.model.Vocal;
@@ -52,6 +53,31 @@ public class FondoRepository {
                 new DataClassRowMapper<>(TotalGrupo.class));
     }
 
+    public List<TotalEvento> totalesPorEvento() {
+        return jdbc.query("SELECT * FROM v_total_evento ORDER BY evento",
+                new DataClassRowMapper<>(TotalEvento.class));
+    }
+
+    /** Catálogo de eventos (se da de alta a mano en la BD). */
+    public List<String> eventos() {
+        return jdbc.queryForList("SELECT nombre FROM evento ORDER BY nombre", String.class);
+    }
+
+    /**
+     * Conceptos del catálogo para un tipo y una bolsa.
+     * @param tipo  INGRESO o EGRESO
+     * @param bolsa GRUPO, EVENTO o COMUN
+     */
+    public List<String> conceptos(String tipo, String bolsa) {
+        return jdbc.queryForList("SELECT nombre FROM concepto WHERE tipo = ? AND bolsa = ? ORDER BY nombre",
+                String.class, tipo, bolsa);
+    }
+
+    /** Agrega un concepto al catálogo; si ya existe no hace nada. */
+    public void agregarConcepto(String nombre, String tipo, String bolsa) {
+        jdbc.update("MERGE INTO concepto KEY (nombre, tipo, bolsa) VALUES (?, ?, ?)", nombre, tipo, bolsa);
+    }
+
     public TotalGeneral totalGeneral() {
         return jdbc.queryForObject("SELECT * FROM v_total_general",
                 new DataClassRowMapper<>(TotalGeneral.class));
@@ -59,7 +85,7 @@ public class FondoRepository {
 
     /**
      * @param tipo              INGRESO, EGRESO o null para ambos
-     * @param grupo             A, B, C, COMUN (fondo común) o null para todos
+     * @param grupo             A, B, C, EVENTOS, COMUN (pagos de la graduación) o null para todos
      * @param evento            nombre del evento o null para todos
      * @param incluirCancelados si false, oculta los cancelados
      * @param limite            máximo de renglones o null para todos
@@ -72,8 +98,10 @@ public class FondoRepository {
             sql.append(" AND m.tipo = ?");
             args.add(tipo);
         }
-        if ("COMUN".equals(grupo)) {
-            sql.append(" AND m.grupo_id IS NULL");
+        if ("EVENTOS".equals(grupo)) {
+            sql.append(" AND m.evento IS NOT NULL");
+        } else if ("COMUN".equals(grupo)) {
+            sql.append(" AND m.grupo_id IS NULL AND m.evento IS NULL");
         } else if (grupo != null) {
             sql.append(" AND m.grupo_id = ?");
             args.add(grupo);

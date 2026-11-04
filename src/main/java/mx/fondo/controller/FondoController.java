@@ -74,6 +74,7 @@ public class FondoController {
     public String resumen(Principal principal, Model model) {
         model.addAttribute("logueado", principal != null);
         model.addAttribute("grupos", service.totalesPorGrupo());
+        model.addAttribute("eventos", service.totalesPorEvento());
         model.addAttribute("general", service.totalGeneral());
         return "resumen";
     }
@@ -87,7 +88,7 @@ public class FondoController {
                               Model model) {
         model.addAttribute("movimientos", service.movimientos(tipo, grupo, evento, cancelados));
         model.addAttribute("grupos", service.grupos());
-        model.addAttribute("eventos", FondoService.EVENTOS);
+        model.addAttribute("eventos", service.eventos());
         model.addAttribute("tipo", tipo);
         model.addAttribute("grupo", grupo);
         model.addAttribute("evento", evento);
@@ -123,22 +124,25 @@ public class FondoController {
         model.addAttribute("vocal", vocal);
         model.addAttribute("ninos", service.ninosDelGrupo(vocal.grupoId()));
         model.addAttribute("montos", FondoService.MONTOS);
-        model.addAttribute("conceptos", FondoService.CONCEPTOS);
-        model.addAttribute("eventos", FondoService.EVENTOS);
+        model.addAttribute("conceptosGrupo", service.conceptos("INGRESO", "GRUPO"));
+        model.addAttribute("conceptosEvento", service.conceptos("INGRESO", "EVENTO"));
+        model.addAttribute("eventos", service.eventos());
         return "ingreso-form";
     }
 
     @PostMapping("/ingresos")
     public String registrarIngreso(Principal principal,
+                                   @RequestParam(defaultValue = "GRUPO") String bolsa,
                                    @RequestParam(required = false) Integer ninoId,
                                    @RequestParam(required = false) String evento,
-                                   @RequestParam String concepto,
+                                   @RequestParam(required = false) String concepto,
                                    @RequestParam(required = false) BigDecimal monto,
                                    @RequestParam(required = false) BigDecimal otroMonto,
                                    RedirectAttributes redirect) {
         try {
             // En el combo "Otra cantidad" manda monto vacío y el valor viene en otroMonto
-            service.registrarIngreso(principal.getName(), ninoId, evento, concepto, monto != null ? monto : otroMonto);
+            service.registrarIngreso(principal.getName(), "EVENTO".equals(bolsa), ninoId, evento, concepto,
+                    monto != null ? monto : otroMonto);
             redirect.addFlashAttribute("ok", "Ingreso registrado.");
             return "redirect:/?tab=movimientos";
         } catch (IllegalArgumentException | DataIntegrityViolationException e) {
@@ -151,24 +155,43 @@ public class FondoController {
     public String formEgreso(Principal principal, Model model) {
         model.addAttribute("vocal", service.vocal(principal.getName()));
         model.addAttribute("hoy", LocalDate.now());
+        model.addAttribute("conceptosGrupo", service.conceptos("EGRESO", "GRUPO"));
+        model.addAttribute("conceptosEvento", service.conceptos("EGRESO", "EVENTO"));
+        model.addAttribute("eventos", service.eventos());
         return "egreso-form";
     }
 
     @PostMapping("/egresos")
     public String registrarEgreso(Principal principal,
-                                  @RequestParam String concepto,
+                                  @RequestParam(defaultValue = "GRUPO") String bolsa,
+                                  @RequestParam(required = false) String evento,
+                                  @RequestParam(required = false) String concepto,
                                   @RequestParam BigDecimal monto,
                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
                                   @RequestParam(required = false) MultipartFile comprobante,
                                   RedirectAttributes redirect) {
         try {
-            service.registrarEgreso(principal.getName(), false, concepto, monto, fecha, comprobante);
+            // Pagos de la graduación (fondo común) todavía no se capturan en pantalla
+            service.registrarEgreso(principal.getName(), false, "EVENTO".equals(bolsa) ? evento : null,
+                    concepto, monto, fecha, comprobante);
             redirect.addFlashAttribute("ok", comprobante == null || comprobante.isEmpty()
                     ? "Gasto registrado sin comprobante." : "Gasto registrado.");
             return "redirect:/?tab=movimientos";
         } catch (IllegalArgumentException | DataIntegrityViolationException | IOException e) {
             redirect.addFlashAttribute("error", mensaje(e));
             return "redirect:/";
+        }
+    }
+
+    /** Lo llama el popup "Agregar nuevo concepto" con fetch; regresa el nombre o el error en texto. */
+    @PostMapping("/registro/concepto")
+    public ResponseEntity<String> agregarConcepto(@RequestParam String nombre,
+                                                  @RequestParam String tipo,
+                                                  @RequestParam String bolsa) {
+        try {
+            return ResponseEntity.ok(service.agregarConcepto(nombre, tipo, bolsa));
+        } catch (IllegalArgumentException | DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest().body(mensaje(e));
         }
     }
 

@@ -67,6 +67,29 @@
   </div>
 </div>
 
+<!-- Popup "Agregar nuevo concepto": se abre encima del formulario desde el combo de concepto.
+     Se envía con fetch para no perder lo capturado; Thymeleaf mete el token CSRF en el form. -->
+<div id="modal-concepto" class="modal modal-top" th:if="${vocal != null}" onclick="if(event.target===this) cerrarConcepto()">
+  <div class="modal-content">
+    <div class="card">
+      <h2>Nuevo concepto</h2>
+      <p class="meta" id="concepto-desc" style="margin:-4px 0 12px"></p>
+      <form id="concepto-form" class="form" th:action="@{/registro/concepto}" method="post" onsubmit="guardarConcepto(event)">
+        <input type="hidden" name="tipo">
+        <input type="hidden" name="bolsa">
+        <label class="field">Nombre del concepto
+          <input name="nombre" required maxlength="150" autocomplete="off" placeholder="Ej. Compra de dulces">
+        </label>
+        <div id="concepto-error" class="alert error" hidden></div>
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="cerrarConcepto()">Cancelar</button>
+          <button class="btn primary">Agregar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Barra fija de totales: visible en todas las pestañas, se refresca cada minuto -->
 <div class="totbar" hx-get="/totales" hx-trigger="load, every 60s"></div>
 
@@ -86,7 +109,47 @@
     document.getElementById('modal-borrar').classList.add('open');
   }
   function cerrarBorrar(){ document.getElementById('modal-borrar').classList.remove('open'); }
-  document.addEventListener('keydown', e => { if(e.key === 'Escape'){ cerrarModal(); cerrarBorrar(); } });
+
+  // Combo de concepto con la opción "Agregar nuevo concepto…"
+  let comboConcepto = null;
+  function conceptoCambio(sel){
+    if (sel.value !== '__nuevo') return;
+    sel.value = '';
+    comboConcepto = sel;
+    const f = document.getElementById('concepto-form');
+    f.reset();
+    f.tipo.value = sel.dataset.tipo;
+    f.bolsa.value = sel.dataset.bolsa;
+    document.getElementById('concepto-desc').textContent =
+      (sel.dataset.tipo === 'INGRESO' ? 'Ingreso' : 'Gasto') + ' · ' + (sel.dataset.bolsa === 'EVENTO' ? 'Evento' : 'Alumno');
+    document.getElementById('concepto-error').hidden = true;
+    document.getElementById('modal-concepto').classList.add('open');
+    setTimeout(() => f.nombre.focus(), 50);
+  }
+  async function guardarConcepto(e){
+    e.preventDefault();
+    const f = e.target, error = document.getElementById('concepto-error');
+    const r = await fetch(f.action, { method: 'POST', body: new URLSearchParams(new FormData(f)) });
+    const texto = await r.text();
+    if (!r.ok) { error.textContent = texto; error.hidden = false; return; }
+    // Si ya estaba en el combo solo se selecciona; si no, se agrega antes de "Agregar nuevo…"
+    let opt = [...comboConcepto.options].find(o => o.value === texto);
+    if (!opt) {
+      opt = new Option(texto, texto);
+      comboConcepto.insertBefore(opt, comboConcepto.querySelector('option[value="__nuevo"]'));
+    }
+    comboConcepto.value = texto;
+    cerrarConcepto();
+  }
+  function cerrarConcepto(){ document.getElementById('modal-concepto').classList.remove('open'); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    // Primero cierra el popup de concepto (está encima del formulario)
+    const concepto = document.getElementById('modal-concepto');
+    if (concepto && concepto.classList.contains('open')) { cerrarConcepto(); return; }
+    cerrarModal(); cerrarBorrar();
+  });
 </script>
 </body>
 </html>

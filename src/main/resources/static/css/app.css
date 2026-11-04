@@ -2,14 +2,14 @@
   --bg:#f5f6f8; --card:#ffffff; --text:#18212d; --muted:#667085; --line:#e3e6eb;
   --brand:#1f4fd8; --brand-soft:#e9effd;
   --in:#15803d; --out:#c0392b; --warn:#b45309; --warn-soft:#fdf3e2;
-  --gA:#1f4fd8; --gB:#c2570c; --gC:#7c3aed; --gX:#334155; --on-color:#ffffff;
+  --gA:#1f4fd8; --gB:#c2570c; --gC:#7c3aed; --gX:#334155; --gE:#0f766e; --barE:#db2777; --on-color:#ffffff;
 }
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#0e1217; --card:#161b22; --text:#e6e9ee; --muted:#98a2b3; --line:#2a313b;
     --brand:#7ea0ff; --brand-soft:#1b2540;
     --in:#4ade80; --out:#f87171; --warn:#fbbf24; --warn-soft:#33260b;
-    --gA:#7ea0ff; --gB:#fb923c; --gC:#b794f6; --gX:#cbd5e1; --on-color:#0e1217;
+    --gA:#7ea0ff; --gB:#fb923c; --gC:#b794f6; --gX:#cbd5e1; --gE:#5eead4; --barE:#f472b6; --on-color:#0e1217;
   }
 }
 *{box-sizing:border-box}
@@ -34,6 +34,26 @@ select,input{font:inherit;color:var(--text);background:var(--card);border:1px so
 .card-link:active{transform:translateY(0)}
 .card-link .go{display:inline-flex;align-items:center;gap:4px;margin-top:8px;color:var(--brand);font-weight:600;font-size:13px}
 .hero .big{font-size:30px;font-weight:700;margin:2px 0 12px}
+/* Dinero disponible: tarjeta destacada con barra grupos/eventos y la suma desglosada */
+.card.hero{border-color:color-mix(in srgb, var(--brand) 35%, var(--line));
+  background:linear-gradient(160deg, color-mix(in srgb, var(--brand) 14%, var(--card)) 0%, var(--card) 70%)}
+.hero-k{font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--brand)}
+.hero .big{font-size:40px;line-height:1.1;margin:4px 0 2px;color:var(--text);letter-spacing:-.01em}
+.hero-sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+.hero-bar{display:flex;gap:3px;height:12px;margin-bottom:12px}
+.hero-bar span{border-radius:99px}
+.hero-bar .hb-grupos{background:var(--brand)}
+/* Eventos en rosa para que resalte junto al azul; ancho mínimo para que no se pierda si es poco */
+.hero-bar .hb-eventos{flex:1;min-width:10px;background:var(--barE)}
+.dot.hb-grupos{background:var(--brand)} .dot.hb-eventos{background:var(--barE)}
+.hero-suma{display:grid;gap:2px}
+.hs{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;font-size:14px}
+.hs-k{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.hs-v{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hs-op{color:var(--muted);font-weight:600;margin-right:6px}
+.hs-total{border-top:1px solid var(--line);margin-top:4px;padding-top:10px}
+.hs-total .hs-k{color:var(--text);font-weight:700}
+.hs-total .hs-v{color:var(--brand);font-size:16px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .stat .k{font-size:12px;color:var(--muted)}
 .stat .v{font-weight:700;font-size:16px}
@@ -43,7 +63,7 @@ select,input{font:inherit;color:var(--text);background:var(--card);border:1px so
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;font-size:14px;flex-wrap:wrap}
 
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;white-space:nowrap;color:var(--on-color)}
-.g-A{background:var(--gA)} .g-B{background:var(--gB)} .g-C{background:var(--gC)} .g-COMUN{background:var(--gX)}
+.g-A{background:var(--gA)} .g-B{background:var(--gB)} .g-C{background:var(--gC)} .g-COMUN{background:var(--gX)} .g-EVENTO{background:var(--gE)}
 
 ul.movs{list-style:none;margin:0;padding:0}
 li.mov{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
@@ -125,6 +145,7 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 .modal.open{display:flex;animation:modalIn .15s ease-out}
 .modal-content{width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.35);border-radius:14px}
 .modal-content .card{margin:0}
+.modal-top{z-index:30} /* popup encima de otro modal (nuevo concepto) */
 @keyframes modalIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 
 footer{color:var(--muted);font-size:12px;margin:24px 0 8px;text-align:center}
@@ -155,7 +176,7 @@ footer{color:var(--muted);font-size:12px;margin:24px 0 8px;text-align:center}
   .card-link{padding-right:34px}
   .card-link::after{top:12px;right:14px;font-size:24px;font-weight:700}
   .card-link .go{display:none} /* el chevron > alcanza como pista visual */
-  .hero .big{font-size:26px}
+  .hero .big{font-size:36px}
   .stats{gap:6px}
   .stat .v{font-size:15px}
   li.mov{grid-template-columns:1fr auto;gap:6px 10px;padding:14px 0}
@@ -184,7 +205,7 @@ footer{color:var(--muted);font-size:12px;margin:24px 0 8px;text-align:center}
   .user{font-size:13px;gap:6px}
   .user .btn{padding:8px 10px;font-size:12px;min-height:36px}
   .actions .btn{flex-basis:calc(50% - 4px);min-width:0;font-size:13px}
-  .hero .big{font-size:22px}
+  .hero .big{font-size:32px}
   .tot .v{font-size:13px}
   .tot.general .v{font-size:16px}
   .tot .k{font-size:10px}
@@ -194,3 +215,34 @@ footer{color:var(--muted);font-size:12px;margin:24px 0 8px;text-align:center}
   .form-actions{flex-direction:column-reverse;gap:8px}
   .form-actions .btn{width:100%;min-width:0}
 }
+
+/* Selector de bolsa en formularios: dos tarjetas grandes (Alumno / Evento), pensadas para el dedo.
+   El radio va escondido; la tarjeta elegida toma el color de su bolsa (--acc). */
+.pick-label{margin:0 0 -4px;font-size:13px;font-weight:600;color:var(--muted)}
+.bolsa-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bolsa-opt{position:relative;display:flex;flex-direction:column;gap:8px;padding:12px;min-height:96px;
+  border:2px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:border-color .15s, background .15s, transform .1s}
+.bolsa-opt input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.bolsa-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:var(--bg);transition:background .15s}
+.bolsa-txt strong{display:block;font-size:16px;color:var(--text)}
+.bolsa-txt small{display:block;margin-top:2px;font-size:12px;line-height:1.3;color:var(--muted)}
+/* Palomita en la esquina */
+.bolsa-opt::after{content:"";position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:99px;
+  border:2px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--on-color)}
+.bolsa-opt:has(input:checked){border-color:var(--acc);background:color-mix(in srgb, var(--acc) 10%, var(--card))}
+.bolsa-opt:has(input:checked) .bolsa-ico{background:color-mix(in srgb, var(--acc) 22%, var(--card))}
+.bolsa-opt:has(input:checked)::after{content:"✓";background:var(--acc);border-color:var(--acc)}
+.bolsa-opt:has(input:focus-visible){outline:2px solid var(--acc);outline-offset:2px}
+.bolsa-opt:active{transform:scale(.97)}
+fieldset.bolsa{border:0;padding:0;margin:0;display:grid;gap:12px;min-width:0}
+fieldset.bolsa[hidden]{display:none}
+@media (max-width:380px){
+  .bolsa-opt{padding:10px;min-height:88px}
+  .bolsa-ico{width:34px;height:34px;font-size:19px}
+  .bolsa-txt strong{font-size:15px}
+}
+
+/* Renglones por evento dentro de la tarjeta de Eventos (Consulta) */
+.evs{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+.evs .row{font-size:12px;color:var(--muted);padding:2px 0}
