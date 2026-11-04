@@ -11,6 +11,9 @@ services:
     environment:
       # BD H2 dentro del volumen montado (fondo.mv.db acaba en ./data del host)
       SPRING_DATASOURCE_URL: jdbc:h2:file:/opt/fondo/data/fondo
+      # Servidor TCP de H2 (ver FondoApplication) para conectarse en vivo desde IntelliJ por túnel SSH:
+      #   ssh -N -L 9092:localhost:9092 root@IP  →  jdbc:h2:tcp://localhost:9092//opt/fondo/data/fondo
+      FONDO_H2_TCP_PORT: "9092"
       # Consola H2 encendida; Caddy la protege con basic auth (ver Caddyfile).
       # webAllowOthers=true porque Caddy proxya desde otro container (H2 lo ve como remoto).
       SPRING_H2_CONSOLE_ENABLED: "true"
@@ -21,6 +24,10 @@ services:
       - ./data:/opt/fondo/data
     expose:
       - "8080"        # solo visible dentro de la red; afuera solo Caddy
+    ports:
+      # H2 por TCP SOLO en localhost del VPS (se llega por túnel SSH). Nunca quitar el 127.0.0.1:
+      # la BD usa sa sin contraseña y quedaría abierta a internet.
+      - "127.0.0.1:9092:9092"
     networks:
       - fondo
 
