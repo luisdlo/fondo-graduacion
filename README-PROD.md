@@ -17,8 +17,8 @@ Internet ─► fondo-ingles.ddns.net :80/:443 ─► Caddy (HTTPS automático, 
 
 | Qué | Dónde |
 |---|---|
-| Código en el VPS | `/opt/fondo` (clon de `github.com/luisdlo/fondo-graduacion`) |
-| BD y comprobantes | `/opt/fondo/data` (fuera del contenedor, sobrevive a rebuilds) |
+| Código en el VPS | `/root/proyect/fondo-graduacion` (clon de `github.com/luisdlo/fondo-graduacion`) |
+| BD y comprobantes | `/root/proyect/fondo-graduacion/data` (fuera del contenedor, sobrevive a rebuilds) |
 | App | https://fondo-ingles.ddns.net |
 | Logs (Dozzle) | https://fondo-ingles.ddns.net/logs/ |
 | Consola H2 | https://fondo-ingles.ddns.net/h2 |
@@ -37,11 +37,14 @@ En el VPS:
 
 ```bash
 ssh root@TU_IP
-cd /opt/fondo
+cd /root/proyect/fondo-graduacion
 
-# 1) Respaldo de la BD y comprobantes (por si acaso)
+# 1) Respaldo de la BD y comprobantes (por si acaso).
+#    Se detiene la app unos segundos para que H2 no esté escribiendo mientras se copia.
+docker compose stop app
 mkdir -p /root/backups
-tar czf /root/backups/fondo-antes-deploy-$(date +%F-%H%M).tar.gz -C /opt/fondo data
+tar czf /root/backups/fondo-antes-deploy-$(date +%F-%H%M).tar.gz -C /root/proyect/fondo-graduacion data
+ls -lh /root/backups/
 
 # 2) Traer el código nuevo
 git pull
@@ -76,7 +79,7 @@ git stash && git pull && git stash pop
 
 ## Lo que borra datos (cuidado)
 
-- `rm` sobre `/opt/fondo/data` o sobre `fondo.mv.db`.
+- `rm` sobre `/root/proyect/fondo-graduacion/data` o sobre `fondo.mv.db`.
 - Correr `docker compose` desde **otra carpeta**: `./data` apuntaría a otro lado y la app
   arrancaría con una BD vacía.
 
@@ -101,11 +104,28 @@ docker compose restart caddy
 | Campo | Valor |
 |---|---|
 | Driver Class | `org.h2.Driver` |
-| JDBC URL | `jdbc:h2:file:/opt/fondo/data/fondo` |
+| JDBC URL | `jdbc:h2:file:/opt/fondo/data/fondo`  (ruta **dentro del contenedor**; en el VPS es `/root/proyect/fondo-graduacion/data/fondo.mv.db`) |
 | User Name | `sa` |
 | Password | *(vacío)* |
 
 Ojo: la consola trae prellenada `jdbc:h2:~/test`; hay que cambiarla o dirá que la BD no existe.
+
+**IntelliJ en vivo** (por túnel SSH; el puerto 9092 solo escucha en localhost del VPS):
+
+```bash
+# En tu Mac, deja esta terminal abierta mientras uses IntelliJ
+ssh -N -L 9092:localhost:9092 root@140.82.27.210
+```
+
+| Campo | Valor |
+|---|---|
+| Connection type | Remote |
+| URL | `jdbc:h2:tcp://localhost:9092//opt/fondo/data/fondo` (doble `/` antes de `opt`) |
+| User / Password | `sa` / *(vacío)* |
+| Driver | H2 **2.2.224** (la misma versión que la app) |
+
+Lo que cambies se aplica directo en producción: usa auto-commit y respalda antes de editar.
+Nunca cambies `127.0.0.1:9092:9092` por `9092:9092` en el `docker-compose.yml`: la BD quedaría abierta a internet.
 
 **Vocales**: entran en la app con su usuario de grupo (`grupoa`, `grupob`, `grupoc`).
 Si alguno olvidó su contraseña, en la consola H2:
@@ -121,7 +141,7 @@ y que la cambie desde **🔒 Cambiar contraseña** al entrar.
 Bajar todo a tu máquina (BD + comprobantes):
 
 ```bash
-rsync -avz root@TU_IP:/opt/fondo/data/ ~/backups/fondo-$(date +%F)/
+rsync -avz root@TU_IP:/root/proyect/fondo-graduacion/data/ ~/backups/fondo-$(date +%F)/
 ```
 
 Para verla en local, copia el `fondo.mv.db` a `~/fondo-graduacion-db/fondo.mv.db` y corre
@@ -130,7 +150,7 @@ Para verla en local, copia el `fondo.mv.db` a `~/fondo-graduacion-db/fondo.mv.db
 Respaldo diario automático en el VPS (`crontab -e`):
 
 ```cron
-0 3 * * * tar czf /root/backups/fondo-$(date +\%F).tar.gz -C /opt/fondo data && find /root/backups -mtime +14 -delete
+0 3 * * * tar czf /root/backups/fondo-$(date +\%F).tar.gz -C /root/proyect/fondo-graduacion data && find /root/backups -mtime +14 -delete
 ```
 
 ## Comandos útiles

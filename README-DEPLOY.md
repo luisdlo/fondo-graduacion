@@ -10,7 +10,7 @@ los logs de todos los contenedores, y la BD H2 en un archivo dentro de
 ```
 Internet → :80 Caddy ─┬─► /logs* → Dozzle (basic auth)
                       └─► /*      → App Spring Boot :8080
-                                     └─► /opt/fondo/data (bind mount)
+                                     └─► /root/proyect/fondo-graduacion/data (bind mount; en el contenedor /opt/fondo/data)
                                           ├─ fondo.mv.db   (BD H2 completa)
                                           ├─ fondo.trace.db
                                           └─ comprobantes/ (PDFs y fotos)
@@ -42,8 +42,8 @@ systemctl enable --now docker
 
 ```bash
 # 1) Clona el repo en el VPS
-git clone https://github.com/luisdlo/fondo-graduacion.git /opt/fondo
-cd /opt/fondo
+git clone https://github.com/luisdlo/fondo-graduacion.git /root/proyect/fondo-graduacion
+cd /root/proyect/fondo-graduacion
 
 # 2) Genera el hash de tu password para Dozzle
 docker run --rm caddy caddy hash-password --plaintext "N4LO66vLWky"
@@ -104,14 +104,14 @@ archivos viven directamente en el filesystem del VPS.
 
 ```bash
 # Desde tu Mac local:
-scp root@TU_IP:/opt/fondo/data/fondo.mv.db ~/Downloads/backup-$(date +%F).mv.db
+scp root@TU_IP:/root/proyect/fondo-graduacion/data/fondo.mv.db ~/Downloads/backup-$(date +%F).mv.db
 ```
 
 ### Bajar BD + comprobantes
 
 ```bash
 # Con rsync (incremental, solo baja lo que cambió):
-rsync -avz root@TU_IP:/opt/fondo/data/ ~/backups/fondo-$(date +%F)/
+rsync -avz root@TU_IP:/root/proyect/fondo-graduacion/data/ ~/backups/fondo-$(date +%F)/
 ```
 
 ### Restaurar en tu local para inspeccionar
@@ -134,7 +134,7 @@ En el VPS, `crontab -e`:
 
 ```cron
 # Backup diario a las 3am; retiene 14 días
-0 3 * * * tar czf /root/backups/fondo-$(date +\%F).tar.gz -C /opt/fondo data && find /root/backups -mtime +14 -delete
+0 3 * * * tar czf /root/backups/fondo-$(date +\%F).tar.gz -C /root/proyect/fondo-graduacion data && find /root/backups -mtime +14 -delete
 ```
 
 ## HTTPS con dominio propio
@@ -164,7 +164,7 @@ docker compose up -d app
 # Accede vía SSH tunnel para no exponer al mundo:
 ssh -L 8080:localhost:8080 root@TU_IP
 # En tu navegador local: http://localhost:8080/h2
-# JDBC URL: jdbc:h2:file:/opt/fondo/data/fondo
+# JDBC URL: jdbc:h2:file:/opt/fondo/data/fondo   (ruta dentro del contenedor, no del VPS)
 # User: sa   Password: (vacío)
 # Al terminar, vuelve a false y reinicia.
 ```
@@ -207,7 +207,7 @@ márcalos como "asume sin cambios" **una sola vez** después del deploy
 inicial:
 
 ```bash
-cd /opt/fondo
+cd /root/proyect/fondo-graduacion
 git update-index --assume-unchanged Caddyfile docker-compose.yml
 ```
 
@@ -227,7 +227,7 @@ git update-index --no-assume-unchanged Caddyfile docker-compose.yml
 Ya con la protección anterior, actualizar es una línea:
 
 ```bash
-cd /opt/fondo
+cd /root/proyect/fondo-graduacion
 git pull
 docker compose up -d --build app
 ```
@@ -249,15 +249,15 @@ docker compose up -d --build app
 completo. **Antes de nada, backup:**
 
 ```bash
-cd /opt/fondo
-tar czf /root/backup-antes-de-redeploy-$(date +%F-%H%M).tar.gz -C /opt/fondo data
+cd /root/proyect/fondo-graduacion
+tar czf /root/backup-antes-de-redeploy-$(date +%F-%H%M).tar.gz -C /root/proyect/fondo-graduacion data
 ls -lh /root/backup-antes-de-redeploy-*.tar.gz   # verifica que se creó
 ```
 
 ### Opción A — Redeploy conservando la BD
 
 ```bash
-cd /opt/fondo
+cd /root/proyect/fondo-graduacion
 
 # 1) Bajar todos los contenedores (los datos en ./data se quedan)
 docker compose down
@@ -282,10 +282,10 @@ no se toca.
 la primera vez.
 
 ```bash
-cd /opt/fondo
+cd /root/proyect/fondo-graduacion
 
 # 1) Backup por si acaso (ya lo hiciste arriba pero por si)
-tar czf /root/backup-nuclear-$(date +%F-%H%M).tar.gz -C /opt/fondo data
+tar czf /root/backup-nuclear-$(date +%F-%H%M).tar.gz -C /root/proyect/fondo-graduacion data
 
 # 2) Bajar contenedores y borrar volúmenes de Caddy
 docker compose down -v
@@ -311,17 +311,17 @@ pide un cert nuevo al detectar el dominio.
 ```bash
 # En el VPS actual, backup y bajarlo a tu Mac:
 ssh root@VIEJO_VPS
-cd /opt/fondo
+cd /root/proyect/fondo-graduacion
 docker compose down
-tar czf /tmp/fondo-full-backup.tar.gz -C /opt/fondo data Caddyfile docker-compose.yml
+tar czf /tmp/fondo-full-backup.tar.gz -C /root/proyect/fondo-graduacion data Caddyfile docker-compose.yml
 exit
 scp root@VIEJO_VPS:/tmp/fondo-full-backup.tar.gz .
 
 # En el VPS nuevo, después de instalar docker y clonar el repo:
 scp fondo-full-backup.tar.gz root@NUEVO_VPS:/tmp/
 ssh root@NUEVO_VPS
-cd /opt/fondo
-tar xzf /tmp/fondo-full-backup.tar.gz -C /opt/fondo/
+cd /root/proyect/fondo-graduacion
+tar xzf /tmp/fondo-full-backup.tar.gz -C /root/proyect/fondo-graduacion/
 git update-index --assume-unchanged Caddyfile docker-compose.yml
 docker compose up -d --build
 ```
