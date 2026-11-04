@@ -3,6 +3,7 @@ package mx.fondo.service;
 import mx.fondo.model.Grupo;
 import mx.fondo.model.Movimiento;
 import mx.fondo.model.Nino;
+import mx.fondo.model.TotalEvento;
 import mx.fondo.model.TotalGeneral;
 import mx.fondo.model.TotalGrupo;
 import mx.fondo.model.Vocal;
@@ -27,10 +28,6 @@ public class FondoService {
 
     private static final Set<String> TIPOS = Set.of("INGRESO", "EGRESO");
 
-    public static final List<String> CONCEPTOS = List.of(
-            "Fondo de graduación", "Halloween", "Rifa 1", "Rifa 2", "Cabina de fotos");
-    /** Eventos para ingresos que no son de un niño. */
-    public static final List<String> EVENTOS = List.of("Halloween", "Cabina de fotos");
     /** Montos sugeridos en el combo; también se puede capturar "otra cantidad". */
     public static final List<BigDecimal> MONTOS = List.of(new BigDecimal("500"), new BigDecimal("1000"));
 
@@ -53,6 +50,19 @@ public class FondoService {
         return repository.totalesPorGrupo();
     }
 
+    public List<TotalEvento> totalesPorEvento() {
+        return repository.totalesPorEvento();
+    }
+
+    /** Eventos y conceptos salen de las tablas evento y concepto (se dan de alta a mano en la BD). */
+    public List<String> eventos() {
+        return repository.eventos();
+    }
+
+    public List<String> conceptos(String tipo, String bolsa) {
+        return repository.conceptos(tipo, bolsa);
+    }
+
     public TotalGeneral totalGeneral() {
         return repository.totalGeneral();
     }
@@ -61,7 +71,7 @@ public class FondoService {
         String tipoValido = (tipo != null && TIPOS.contains(tipo)) ? tipo : null;
         String grupoValido = (grupo == null || grupo.isBlank()) ? null : grupo;
         // Ojo: List.of(...).contains(null) lanza NPE, por eso se revisa null primero
-        String eventoValido = (evento != null && EVENTOS.contains(evento)) ? evento : null;
+        String eventoValido = (evento != null && eventos().contains(evento)) ? evento : null;
         return repository.movimientos(tipoValido, grupoValido, eventoValido, incluirCancelados, null);
     }
 
@@ -80,38 +90,68 @@ public class FondoService {
         return repository.ninosDelGrupo(grupoId);
     }
 
-    /** Ingreso al fondo del grupo del vocal. El niño es opcional. */
-    public void registrarIngreso(String usuario, Integer ninoId, String evento, String concepto, BigDecimal monto) {
+    /**
+     * Ingreso: aportación de un alumno (al grupo del vocal) o de un evento (bolsa Eventos,
+     * cualquier vocal). El concepto debe estar en el catálogo de esa bolsa.
+     */
+    public void registrarIngreso(String usuario, boolean esEvento, Integer ninoId, String evento,
+                                 String concepto, BigDecimal monto) {
         Vocal vocal = vocal(usuario);
-        if (!CONCEPTOS.contains(concepto)) {
-            throw new IllegalArgumentException("Elige un concepto válido.");
-        }
-        // Siempre va ligado a un niño o, si no hay niño, a un evento
-        if (ninoId != null) {
+        if (esEvento) {
+            validarEvento(evento);
+            ninoId = null;
+        } else {
+            if (ninoId == null) {
+                throw new IllegalArgumentException("Elige el niño.");
+            }
             evento = null;
-        } else if (evento == null || !EVENTOS.contains(evento)) {
-            throw new IllegalArgumentException("Elige el niño o el evento.");
         }
+        validarConcepto(concepto, "INGRESO", esEvento ? "EVENTO" : "GRUPO");
         if (monto == null || monto.signum() <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor a cero.");
         }
-        repository.insertarMovimiento("INGRESO", vocal.grupoId(), ninoId, evento, concepto,
+        repository.insertarMovimiento("INGRESO", esEvento ? null : vocal.grupoId(), ninoId, evento, concepto,
                 monto, LocalDate.now(), vocal.nombre(), null);
     }
 
-    /** Gasto del grupo del vocal o pago de la graduación desde el fondo común. */
-    public void registrarEgreso(String usuario, boolean fondoComun, String concepto, BigDecimal monto,
+    /**
+     * Gasto del grupo del vocal, de un evento (cualquier vocal) o pago de la graduación
+     * (fondoComun; preparado, todavía no se usa en pantalla).
+     */
+    public void registrarEgreso(String usuario, boolean fondoComun, String evento, String concepto, BigDecimal monto,
                                 LocalDate fecha, MultipartFile comprobante) throws IOException {
         Vocal vocal = vocal(usuario);
-        if (concepto == null || concepto.isBlank()) {
-            throw new IllegalArgumentException("Escribe el concepto del gasto.");
+        String bolsa;
+        if (fondoComun) {
+            bolsa = "COMUN";
+            evento = null;
+        } else if (evento != null && !evento.isBlank()) {
+            bolsa = "EVENTO";
+            validarEvento(evento);
+        } else {
+            bolsa = "GRUPO";
+            evento = null;
         }
+        validarConcepto(concepto, "EGRESO", bolsa);
         if (monto == null || monto.signum() <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor a cero.");
         }
         String archivo = guardarComprobante(comprobante);
-        repository.insertarMovimiento("EGRESO", fondoComun ? null : vocal.grupoId(), null, null, concepto.trim(),
-                monto, fecha != null ? fecha : LocalDate.now(), vocal.nombre(), archivo);
+        repository.insertarMovimiento("EGRESO", "GRUPO".equals(bolsa) ? vocal.grupoId() : null, null, evento,
+                concepto, monto, fecha != null ? fecha : LocalDate.now(), vocal.nombre(), archivo);
+    }
+
+    private void validarEvento(String evento) {
+        // Ojo: List.contains(null) puede lanzar NPE, por eso se revisa null primero
+        if (evento == null || !eventos().contains(evento)) {
+            throw new IllegalArgumentException("Elige el evento.");
+        }
+    }
+
+    private void validarConcepto(String concepto, String tipo, String bolsa) {
+        if (concepto == null || !conceptos(tipo, bolsa).contains(concepto)) {
+            throw new IllegalArgumentException("Elige un concepto válido.");
+        }
     }
 
     /**
@@ -133,13 +173,18 @@ public class FondoService {
     }
 
     /**
-     * Borra un movimiento (DELETE en la BD). Solo el vocal del grupo puede borrar sus movimientos;
-     * en fondo común solo quien lo registró. Regresa el grupo (A/B/C o COMUN) para el filtro.
+     * Borra un movimiento (DELETE en la BD). Los de eventos los puede borrar cualquier vocal;
+     * los del grupo solo su vocal; los pagos de la graduación solo quien los registró.
+     * Regresa el filtro (A/B/C, EVENTOS o COMUN) para volver a la lista.
      */
     public String borrarMovimiento(String usuario, int id) {
         Vocal vocal = vocal(usuario);
         Movimiento m = repository.movimientoPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException("Movimiento no encontrado."));
+        if (m.esEvento()) {
+            repository.borrar(id);
+            return "EVENTOS";
+        }
         if (m.grupoId() == null) {
             if (!vocal.nombre().equals(m.registradoPor())) {
                 throw new IllegalStateException("Solo quien registró el pago del fondo común puede borrarlo.");

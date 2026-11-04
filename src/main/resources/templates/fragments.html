@@ -4,10 +4,12 @@
 <span th:fragment="money(v)" th:text="${'$' + #numbers.formatDecimal(v, 1, 'COMMA', 0, 'POINT')}">$0</span>
 
 <!-- Un movimiento de la lista. Si el vocal puede borrarlo, aparece la franja azul,
-     el badge "TUYO" y el botón rojo de Borrar que abre el modal de confirmación. -->
+     el badge "TUYO" y el botón rojo de Borrar que abre el modal de confirmación.
+     Los de eventos los puede borrar cualquier vocal. -->
 <li th:fragment="mov(m, vocal)" class="mov"
     th:with="puedeBorrar=${vocal != null
-              and ((m.grupoId != null and m.grupoId == vocal.grupoId)
+              and (m.esEvento()
+                or (m.grupoId != null and m.grupoId == vocal.grupoId)
                 or (m.grupoId == null and m.registradoPor == vocal.nombre))}"
     th:classappend="${(m.esIngreso() ? 'ingreso' : 'egreso')
               + (m.cancelado ? ' is-cancel' : '')

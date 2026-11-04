@@ -2,14 +2,14 @@
   --bg:#f5f6f8; --card:#ffffff; --text:#18212d; --muted:#667085; --line:#e3e6eb;
   --brand:#1f4fd8; --brand-soft:#e9effd;
   --in:#15803d; --out:#c0392b; --warn:#b45309; --warn-soft:#fdf3e2;
-  --gA:#1f4fd8; --gB:#c2570c; --gC:#7c3aed; --gX:#334155; --on-color:#ffffff;
+  --gA:#1f4fd8; --gB:#c2570c; --gC:#7c3aed; --gX:#334155; --gE:#0f766e; --on-color:#ffffff;
 }
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#0e1217; --card:#161b22; --text:#e6e9ee; --muted:#98a2b3; --line:#2a313b;
     --brand:#7ea0ff; --brand-soft:#1b2540;
     --in:#4ade80; --out:#f87171; --warn:#fbbf24; --warn-soft:#33260b;
-    --gA:#7ea0ff; --gB:#fb923c; --gC:#b794f6; --gX:#cbd5e1; --on-color:#0e1217;
+    --gA:#7ea0ff; --gB:#fb923c; --gC:#b794f6; --gX:#cbd5e1; --gE:#5eead4; --on-color:#0e1217;
   }
 }
 *{box-sizing:border-box}
@@ -43,7 +43,7 @@ select,input{font:inherit;color:var(--text);background:var(--card);border:1px so
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;font-size:14px;flex-wrap:wrap}
 
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;white-space:nowrap;color:var(--on-color)}
-.g-A{background:var(--gA)} .g-B{background:var(--gB)} .g-C{background:var(--gC)} .g-COMUN{background:var(--gX)}
+.g-A{background:var(--gA)} .g-B{background:var(--gB)} .g-C{background:var(--gC)} .g-COMUN{background:var(--gX)} .g-EVENTO{background:var(--gE)}
 
 ul.movs{list-style:none;margin:0;padding:0}
 li.mov{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
@@ -194,3 +194,16 @@ footer{color:var(--muted);font-size:12px;margin:24px 0 8px;text-align:center}
   .form-actions{flex-direction:column-reverse;gap:8px}
   .form-actions .btn{width:100%;min-width:0}
 }
+
+/* Selector de bolsa en formularios (alumno/grupo o evento) */
+.radio-row{display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
+.radio-row label{display:flex;gap:6px;align-items:center;font-weight:500}
+.radio-row input{width:auto}
+fieldset.bolsa{border:0;padding:0;margin:0;display:grid;gap:12px;min-width:0}
+fieldset.bolsa[hidden]{display:none}
+
+/* Desglose por evento en la Consulta */
+.desglose{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+.desglose th,.desglose td{padding:4px 6px;text-align:right;border-top:1px solid var(--line)}
+.desglose th:first-child,.desglose td:first-child{text-align:left}
+.desglose th{font-weight:600;color:var(--muted)}

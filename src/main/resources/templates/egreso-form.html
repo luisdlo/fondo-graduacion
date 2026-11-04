@@ -1,10 +1,44 @@
-<!-- Formulario de gasto (pedazo que HTMX pone en #panel). Se envía normal y regresa a "/". -->
+<!-- Formulario de gasto (pedazo que HTMX pone en #panel). Se envía normal y regresa a "/".
+     Un fieldset por bolsa: el que no está elegido queda disabled y no se envía ni se valida. -->
 <div class="card">
   <h2>Registrar gasto</h2>
-  <p class="meta" style="margin:-4px 0 12px" th:text="|Se registra como gasto del ${vocal.grupoNombre} a nombre de ${vocal.nombre}|"></p>
+  <p class="meta" style="margin:-4px 0 12px" th:text="|Registra ${vocal.nombre}|"></p>
 
   <form class="form" th:action="@{/egresos}" method="post" enctype="multipart/form-data">
-    <label class="field">Concepto<input name="concepto" required placeholder="Ej. Anticipo del salón, invitaciones, fotógrafo"></label>
+    <div class="radio-row"
+         onchange="const ev = this.querySelector('input:checked').value === 'EVENTO';
+                   const f = this.closest('form'); f.querySelector('#egr-grupo').disabled = f.querySelector('#egr-grupo').hidden = ev;
+                   f.querySelector('#egr-evento').disabled = f.querySelector('#egr-evento').hidden = !ev;">
+      <label><input type="radio" name="bolsa" value="GRUPO" checked> <span th:text="|Mi grupo (${vocal.grupoNombre})|">Mi grupo</span></label>
+      <label><input type="radio" name="bolsa" value="EVENTO"> Evento</label>
+    </div>
+
+    <fieldset id="egr-grupo" class="bolsa">
+      <p class="hint" th:text="|Se resta al ${vocal.grupoNombre}|"></p>
+      <label class="field">Concepto
+        <select name="concepto" required>
+          <option value="">— Elige el concepto —</option>
+          <option th:each="c : ${conceptosGrupo}" th:value="${c}" th:text="${c}">Invitaciones</option>
+        </select>
+      </label>
+    </fieldset>
+
+    <fieldset id="egr-evento" class="bolsa" hidden disabled>
+      <p class="hint">Se resta a la bolsa de Eventos (de los tres grupos)</p>
+      <label class="field">Evento
+        <select name="evento" required>
+          <option value="">— Elige el evento —</option>
+          <option th:each="e : ${eventos}" th:value="${e}" th:text="${e}">Halloween</option>
+        </select>
+      </label>
+      <label class="field">Concepto
+        <select name="concepto" required>
+          <option value="">— Elige el concepto —</option>
+          <option th:each="c : ${conceptosEvento}" th:value="${c}" th:text="${c}">Compra de juguetes</option>
+        </select>
+      </label>
+    </fieldset>
+
     <div class="grid2">
       <label class="field">Monto<input name="monto" type="number" min="1" step="0.01" inputmode="decimal" required></label>
       <label class="field">Fecha<input name="fecha" type="date" th:value="${hoy}" required></label>

@@ -20,8 +20,10 @@ CREATE TABLE IF NOT EXISTS nino (
   CONSTRAINT uq_nino_grupo UNIQUE (id, grupo_id)   -- permite validar que el niño sea del mismo grupo del movimiento
 );
 
--- Ingresos y gastos en una sola tabla.
--- grupo_id NULL = fondo común (pagos de la graduación).
+-- Ingresos y gastos en una sola tabla. Tres bolsas:
+--   grupo_id A/B/C                 = grupo (aportaciones por niño y gastos del grupo)
+--   grupo_id NULL + evento         = Eventos (Halloween, patinada, rifas...; afecta a los tres grupos)
+--   grupo_id NULL + evento NULL    = pagos de la graduación (preparado, todavía no se usa en pantalla)
 -- Nunca se borra: se cancela con UPDATE (cancelado, motivo, cancelado_por).
 CREATE TABLE IF NOT EXISTS movimiento (
   id               INT           AUTO_INCREMENT PRIMARY KEY,
@@ -33,14 +35,15 @@ CREATE TABLE IF NOT EXISTS movimiento (
   fecha            DATE          NOT NULL DEFAULT CURRENT_DATE,
   registrado_por   VARCHAR(100)  NOT NULL,
   comprobante      VARCHAR(255),                 -- ruta o nombre del PDF/foto
+  evento           VARCHAR(100),                 -- bolsa Eventos (grupo_id NULL)
   cancelado        BOOLEAN       NOT NULL DEFAULT FALSE,
   motivo_cancelacion VARCHAR(255),
   cancelado_por    VARCHAR(100),
 
   CONSTRAINT ck_tipo        CHECK (tipo IN ('INGRESO', 'EGRESO')),
   CONSTRAINT ck_monto       CHECK (monto > 0),
-  -- Ingresos: siempre de un grupo y con uno de los conceptos permitidos (ver ck_ingreso abajo)
-  CONSTRAINT ck_ingreso     CHECK (tipo = 'EGRESO' OR (grupo_id IS NOT NULL AND concepto IN ('Fondo de graduación', 'Halloween', 'Rifa 1', 'Rifa 2', 'Cabina de fotos'))),
+  -- Ingresos: siempre de un grupo o de un evento (ver ck_ingreso abajo)
+  CONSTRAINT ck_ingreso     CHECK (tipo = 'EGRESO' OR grupo_id IS NOT NULL OR evento IS NOT NULL),
   -- El niño solo aplica a ingresos
   CONSTRAINT ck_nino        CHECK (nino_id IS NULL OR tipo = 'INGRESO'),
   -- Cancelar exige motivo y quién
@@ -49,24 +52,59 @@ CREATE TABLE IF NOT EXISTS movimiento (
   CONSTRAINT fk_nino_grupo  FOREIGN KEY (nino_id, grupo_id) REFERENCES nino(id, grupo_id)
 );
 
--- BD ya existentes: reemplaza el ck_ingreso viejo (solo "Fondo de graduación" y $500/$1,000)
--- por el actual. Idempotente: se puede correr en cada arranque.
+-- Catálogos que el admin da de alta a mano en la consola H2.
+CREATE TABLE IF NOT EXISTS evento (
+  nombre VARCHAR(100) PRIMARY KEY            -- 'Halloween', 'Patinada', 'Rifa 1', ...
+);
+
+-- Conceptos permitidos según tipo y bolsa. Ej.: ('Compra de juguetes', 'EGRESO', 'EVENTO')
+CREATE TABLE IF NOT EXISTS concepto (
+  nombre VARCHAR(150) NOT NULL,
+  tipo   VARCHAR(7)   NOT NULL,
+  bolsa  VARCHAR(6)   NOT NULL,
+  PRIMARY KEY (nombre, tipo, bolsa),
+  CONSTRAINT ck_concepto_tipo  CHECK (tipo IN ('INGRESO', 'EGRESO')),
+  CONSTRAINT ck_concepto_bolsa CHECK (bolsa IN ('GRUPO', 'EVENTO', 'COMUN'))
+);
+
+-- BD viejas sin la columna evento
+ALTER TABLE movimiento ADD COLUMN IF NOT EXISTS evento VARCHAR(100);
+
+-- BD ya existentes: los conceptos ya no van fijos en el CHECK, ahora salen de la tabla concepto.
+-- Idempotente: se puede correr en cada arranque.
 ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS ck_ingreso;
 ALTER TABLE movimiento ADD CONSTRAINT ck_ingreso
-  CHECK (tipo = 'EGRESO' OR (grupo_id IS NOT NULL AND concepto IN ('Fondo de graduación', 'Halloween', 'Rifa 1', 'Rifa 2', 'Cabina de fotos')));
-
--- Evento del ingreso cuando no es de un niño (la lista vive en FondoService.EVENTOS).
-ALTER TABLE movimiento ADD COLUMN IF NOT EXISTS evento VARCHAR(100);
+  CHECK (tipo = 'EGRESO' OR grupo_id IS NOT NULL OR evento IS NOT NULL);
 
 -- Ingresos viejos "sin niño" quedan como Halloween (después de la primera vez ya no encuentra nada).
 UPDATE movimiento SET evento = 'Halloween'
  WHERE tipo = 'INGRESO' AND nino_id IS NULL AND evento IS NULL;
 
--- Ingreso: exactamente uno de niño o evento. Gasto: nunca evento.
+-- Los eventos ahora son de todos: los que estaban cargados a un grupo pasan a la bolsa Eventos.
+UPDATE movimiento SET grupo_id = NULL
+ WHERE evento IS NOT NULL AND grupo_id IS NOT NULL;
+
+-- Eventos que ya se usan en movimientos (para que la FK no truene). Los nuevos se dan de alta a mano.
+INSERT INTO evento (nombre)
+SELECT DISTINCT evento FROM movimiento
+ WHERE evento IS NOT NULL AND evento NOT IN (SELECT nombre FROM evento);
+
+-- Concepto mínimo para poder registrar aportaciones; el resto se da de alta a mano.
+INSERT INTO concepto (nombre, tipo, bolsa)
+SELECT 'Fondo de graduación', 'INGRESO', 'GRUPO'
+ WHERE NOT EXISTS (SELECT 1 FROM concepto);
+
+-- Ingreso: exactamente uno de niño (grupo) o evento. Gasto: nunca niño.
 ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS ck_nino_evento;
 ALTER TABLE movimiento ADD CONSTRAINT ck_nino_evento CHECK (
-  (tipo = 'INGRESO' AND (nino_id IS NULL) <> (evento IS NULL))
-  OR (tipo = 'EGRESO' AND evento IS NULL));
+  tipo = 'EGRESO' OR (nino_id IS NULL) <> (evento IS NULL));
+
+-- Un movimiento de evento no es de ningún grupo
+ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS ck_evento_sin_grupo;
+ALTER TABLE movimiento ADD CONSTRAINT ck_evento_sin_grupo CHECK (evento IS NULL OR grupo_id IS NULL);
+
+ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS fk_evento;
+ALTER TABLE movimiento ADD CONSTRAINT fk_evento FOREIGN KEY (evento) REFERENCES evento(nombre);
 
 -- ---------- Totales (solo movimientos no cancelados) ----------
 
@@ -82,12 +120,24 @@ FROM grupo g
 LEFT JOIN movimiento m ON m.grupo_id = g.id AND m.cancelado = FALSE
 GROUP BY g.id, g.nombre, g.vocal;
 
--- Total general: suma de los grupos menos los pagos del fondo común
+-- Total por evento: lo que juntó menos lo que se invirtió
+CREATE OR REPLACE VIEW v_total_evento AS
+SELECT e.nombre AS evento,
+       COALESCE(SUM(CASE WHEN m.tipo = 'INGRESO' THEN m.monto END), 0) AS ingresos,
+       COALESCE(SUM(CASE WHEN m.tipo = 'EGRESO'  THEN m.monto END), 0) AS gastos,
+       COALESCE(SUM(CASE WHEN m.tipo = 'INGRESO' THEN m.monto ELSE -m.monto END), 0) AS total
+FROM evento e
+LEFT JOIN movimiento m ON m.evento = e.nombre AND m.cancelado = FALSE
+GROUP BY e.nombre;
+
+-- Total general: grupos + eventos − pagos de la graduación
 CREATE OR REPLACE VIEW v_total_general AS
-SELECT (SELECT COALESCE(SUM(total), 0) FROM v_total_grupo)                                   AS total_grupos,
-       (SELECT COALESCE(SUM(monto), 0) FROM movimiento WHERE grupo_id IS NULL AND cancelado = FALSE) AS pagos_graduacion,
-       (SELECT COALESCE(SUM(total), 0) FROM v_total_grupo)
-     - (SELECT COALESCE(SUM(monto), 0) FROM movimiento WHERE grupo_id IS NULL AND cancelado = FALSE) AS total_general;
+SELECT x.total_grupos, x.total_eventos, x.pagos_graduacion,
+       x.total_grupos + x.total_eventos - x.pagos_graduacion AS total_general
+FROM (SELECT (SELECT COALESCE(SUM(total), 0) FROM v_total_grupo)  AS total_grupos,
+             (SELECT COALESCE(SUM(total), 0) FROM v_total_evento) AS total_eventos,
+             (SELECT COALESCE(SUM(monto), 0) FROM movimiento
+               WHERE grupo_id IS NULL AND evento IS NULL AND tipo = 'EGRESO' AND cancelado = FALSE) AS pagos_graduacion) x;
 
 -- Aportación por niño
 CREATE OR REPLACE VIEW v_total_nino AS

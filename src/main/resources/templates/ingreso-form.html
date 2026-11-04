@@ -1,27 +1,50 @@
-<!-- Formulario de ingreso (pedazo que HTMX pone en #panel). Se envía normal y regresa a "/". -->
+<!-- Formulario de ingreso (pedazo que HTMX pone en #panel). Se envía normal y regresa a "/".
+     Un fieldset por bolsa: el que no está elegido queda disabled y no se envía ni se valida. -->
 <div class="card">
   <h2>Registrar ingreso</h2>
-  <p class="meta" style="margin:-4px 0 12px" th:text="|Se registra en el ${vocal.grupoNombre} a nombre de ${vocal.nombre} · fecha de hoy|"></p>
+  <p class="meta" style="margin:-4px 0 12px" th:text="|Registra ${vocal.nombre} · fecha de hoy|"></p>
 
   <form class="form" th:action="@{/ingresos}" method="post">
-    <label class="field">Concepto
-      <select name="concepto" required>
-        <option th:each="c : ${conceptos}" th:value="${c}" th:text="${c}">Fondo de graduación</option>
-      </select>
-    </label>
-    <label class="field">Niño
-      <select name="ninoId"
-              onchange="const ev = this.form.querySelector('#campo-evento'); ev.hidden = this.value !== ''; this.form.evento.required = this.value === '';">
-        <option value="">— Sin niño (es de un evento) —</option>
-        <option th:each="n : ${ninos}" th:value="${n.id}" th:text="${n.nombre}">Niño</option>
-      </select>
-    </label>
-    <!-- Si no hay niño, el ingreso va ligado a un evento -->
-    <label class="field" id="campo-evento">Evento
-      <select name="evento" required>
-        <option th:each="e : ${eventos}" th:value="${e}" th:text="${e}">Halloween</option>
-      </select>
-    </label>
+    <div class="radio-row"
+         onchange="const ev = this.querySelector('input:checked').value === 'EVENTO';
+                   const f = this.closest('form'); f.querySelector('#ing-grupo').disabled = f.querySelector('#ing-grupo').hidden = ev;
+                   f.querySelector('#ing-evento').disabled = f.querySelector('#ing-evento').hidden = !ev;">
+      <label><input type="radio" name="bolsa" value="GRUPO" checked> Aportación de alumno</label>
+      <label><input type="radio" name="bolsa" value="EVENTO"> Evento</label>
+    </div>
+
+    <fieldset id="ing-grupo" class="bolsa">
+      <p class="hint" th:text="|Se suma al ${vocal.grupoNombre}|"></p>
+      <label class="field">Niño
+        <select name="ninoId" required>
+          <option value="">— Elige al niño —</option>
+          <option th:each="n : ${ninos}" th:value="${n.id}" th:text="${n.nombre}">Niño</option>
+        </select>
+      </label>
+      <label class="field">Concepto
+        <select name="concepto" required>
+          <option value="">— Elige el concepto —</option>
+          <option th:each="c : ${conceptosGrupo}" th:value="${c}" th:text="${c}">Fondo de graduación</option>
+        </select>
+      </label>
+    </fieldset>
+
+    <fieldset id="ing-evento" class="bolsa" hidden disabled>
+      <p class="hint">Se suma a la bolsa de Eventos (de los tres grupos)</p>
+      <label class="field">Evento
+        <select name="evento" required>
+          <option value="">— Elige el evento —</option>
+          <option th:each="e : ${eventos}" th:value="${e}" th:text="${e}">Halloween</option>
+        </select>
+      </label>
+      <label class="field">Concepto
+        <select name="concepto" required>
+          <option value="">— Elige el concepto —</option>
+          <option th:each="c : ${conceptosEvento}" th:value="${c}" th:text="${c}">Venta de juguetes</option>
+        </select>
+      </label>
+    </fieldset>
+
     <label class="field">Monto
       <select name="monto"
               onchange="const otro = this.form.otroMonto; otro.hidden = this.value !== ''; otro.required = this.value === ''; if (!otro.hidden) otro.focus();">
