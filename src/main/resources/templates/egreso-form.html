@@ -24,9 +24,10 @@
 
     <fieldset id="egr-grupo" class="bolsa">
       <label class="field">Concepto
-        <select name="concepto" required>
+        <select name="concepto" required data-tipo="EGRESO" data-bolsa="GRUPO" onchange="conceptoCambio(this)">
           <option value="">— Elige el concepto —</option>
           <option th:each="c : ${conceptosGrupo}" th:value="${c}" th:text="${c}">Invitaciones</option>
+          <option value="__nuevo">＋ Agregar nuevo concepto…</option>
         </select>
       </label>
     </fieldset>
@@ -39,9 +40,10 @@
         </select>
       </label>
       <label class="field">Concepto
-        <select name="concepto" required>
+        <select name="concepto" required data-tipo="EGRESO" data-bolsa="EVENTO" onchange="conceptoCambio(this)">
           <option value="">— Elige el concepto —</option>
           <option th:each="c : ${conceptosEvento}" th:value="${c}" th:text="${c}">Compra de juguetes</option>
+          <option value="__nuevo">＋ Agregar nuevo concepto…</option>
         </select>
       </label>
     </fieldset>

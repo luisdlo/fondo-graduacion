@@ -73,6 +73,11 @@ public class FondoRepository {
                 String.class, tipo, bolsa);
     }
 
+    /** Agrega un concepto al catálogo; si ya existe no hace nada. */
+    public void agregarConcepto(String nombre, String tipo, String bolsa) {
+        jdbc.update("MERGE INTO concepto KEY (nombre, tipo, bolsa) VALUES (?, ?, ?)", nombre, tipo, bolsa);
+    }
+
     public TotalGeneral totalGeneral() {
         return jdbc.queryForObject("SELECT * FROM v_total_general",
                 new DataClassRowMapper<>(TotalGeneral.class));

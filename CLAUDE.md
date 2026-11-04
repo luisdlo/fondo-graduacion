@@ -69,8 +69,9 @@ db/datos-ejemplo.sql         ← datos de prueba; se corre UNA vez a mano en la 
   Un vocal por grupo; el login vive aquí (no hay tabla de usuarios).
 - **nino**: `id`, `nombre`, `grupo_id`.
 - **evento** (`nombre` PK): catálogo de eventos (Halloween, Patinada, Rifa 1…). Se da de alta a mano en la BD.
-- **concepto** (`nombre`, `tipo` INGRESO|EGRESO, `bolsa` GRUPO|EVENTO|COMUN): catálogo de conceptos,
-  también a mano. Cada combo de los formularios muestra solo los de su tipo y bolsa.
+- **concepto** (`nombre`, `tipo` INGRESO|EGRESO, `bolsa` GRUPO|EVENTO|COMUN): catálogo de conceptos.
+  Cada combo de los formularios muestra solo los de su tipo y bolsa, y trae la opción
+  "Agregar nuevo concepto…" (popup → `POST /registro/concepto`, cualquier vocal).
 - **movimiento**: ingresos y gastos en una sola tabla. Tres **bolsas**:
   - **Grupo**: `grupo_id` A/B/C, `evento` NULL (aportaciones por niño y gastos del grupo)
   - **Eventos**: `grupo_id` NULL + `evento` (FK a `evento`). Es de los tres grupos (CHECK `ck_evento_sin_grupo`)

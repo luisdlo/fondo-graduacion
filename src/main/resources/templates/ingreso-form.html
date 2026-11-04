@@ -30,9 +30,10 @@
         </select>
       </label>
       <label class="field">Concepto
-        <select name="concepto" required>
+        <select name="concepto" required data-tipo="INGRESO" data-bolsa="GRUPO" onchange="conceptoCambio(this)">
           <option value="">— Elige el concepto —</option>
           <option th:each="c : ${conceptosGrupo}" th:value="${c}" th:text="${c}">Fondo de graduación</option>
+          <option value="__nuevo">＋ Agregar nuevo concepto…</option>
         </select>
       </label>
     </fieldset>
@@ -45,9 +46,10 @@
         </select>
       </label>
       <label class="field">Concepto
-        <select name="concepto" required>
+        <select name="concepto" required data-tipo="INGRESO" data-bolsa="EVENTO" onchange="conceptoCambio(this)">
           <option value="">— Elige el concepto —</option>
           <option th:each="c : ${conceptosEvento}" th:value="${c}" th:text="${c}">Venta de juguetes</option>
+          <option value="__nuevo">＋ Agregar nuevo concepto…</option>
         </select>
       </label>
     </fieldset>

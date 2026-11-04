@@ -183,6 +183,18 @@ public class FondoController {
         }
     }
 
+    /** Lo llama el popup "Agregar nuevo concepto" con fetch; regresa el nombre o el error en texto. */
+    @PostMapping("/registro/concepto")
+    public ResponseEntity<String> agregarConcepto(@RequestParam String nombre,
+                                                  @RequestParam String tipo,
+                                                  @RequestParam String bolsa) {
+        try {
+            return ResponseEntity.ok(service.agregarConcepto(nombre, tipo, bolsa));
+        } catch (IllegalArgumentException | DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest().body(mensaje(e));
+        }
+    }
+
     @GetMapping("/registro/cambiar-password")
     public String formCambiarPassword(Principal principal, Model model) {
         model.addAttribute("vocal", service.vocal(principal.getName()));

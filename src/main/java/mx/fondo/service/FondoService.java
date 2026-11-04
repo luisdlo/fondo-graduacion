@@ -63,6 +63,25 @@ public class FondoService {
         return repository.conceptos(tipo, bolsa);
     }
 
+    /**
+     * Cualquier vocal agrega un concepto desde el combo del formulario (bolsa GRUPO o EVENTO).
+     * Regresa el nombre como quedó guardado para seleccionarlo en el combo.
+     */
+    public String agregarConcepto(String nombre, String tipo, String bolsa) {
+        String limpio = nombre == null ? "" : nombre.trim().replaceAll("\\s+", " ");
+        if (limpio.isEmpty()) {
+            throw new IllegalArgumentException("Escribe el nombre del concepto.");
+        }
+        if (limpio.length() > 150) {
+            throw new IllegalArgumentException("El concepto es muy largo (máximo 150 letras).");
+        }
+        if (tipo == null || !TIPOS.contains(tipo) || !("GRUPO".equals(bolsa) || "EVENTO".equals(bolsa))) {
+            throw new IllegalArgumentException("No se pudo agregar el concepto.");
+        }
+        repository.agregarConcepto(limpio, tipo, bolsa);
+        return limpio;
+    }
+
     public TotalGeneral totalGeneral() {
         return repository.totalGeneral();
     }

@@ -125,6 +125,7 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 .modal.open{display:flex;animation:modalIn .15s ease-out}
 .modal-content{width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.35);border-radius:14px}
 .modal-content .card{margin:0}
+.modal-top{z-index:30} /* popup encima de otro modal (nuevo concepto) */
 @keyframes modalIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 
 footer{color:var(--muted);font-size:12px;margin:24px 0 8px;text-align:center}
