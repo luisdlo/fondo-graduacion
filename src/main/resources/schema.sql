@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS evento (
 );
 
 -- Halloween va desde el inicio (los movimientos viejos sin evento y los de la cabina de fotos caen ahí).
-MERGE INTO evento KEY (nombre) VALUES ('Halloween');
+-- Solo si la tabla está vacía: así se le puede cambiar el nombre sin que vuelva a aparecer.
+INSERT INTO evento (nombre) SELECT 'Halloween' WHERE NOT EXISTS (SELECT 1 FROM evento);
 
 -- Conceptos permitidos según tipo y bolsa. Ej.: ('Compra de juguetes', 'EGRESO', 'EVENTO')
 CREATE TABLE IF NOT EXISTS concepto (
@@ -89,19 +90,21 @@ UPDATE movimiento SET grupo_id = NULL
 
 -- La cabina de fotos no es un evento: fue parte de Halloween (queda como concepto).
 UPDATE movimiento SET evento = 'Halloween', concepto = 'Cabina de fotos'
- WHERE evento = 'Cabina de fotos';
+ WHERE evento = 'Cabina de fotos' AND EXISTS (SELECT 1 FROM evento WHERE nombre = 'Halloween');
 
 -- Eventos que ya se usan en movimientos (para que la FK no truene). Los nuevos se dan de alta a mano.
 INSERT INTO evento (nombre)
 SELECT DISTINCT evento FROM movimiento
  WHERE evento IS NOT NULL AND evento NOT IN (SELECT nombre FROM evento);
 
--- Conceptos iniciales; el resto se da de alta a mano. MERGE solo agrega los que falten
--- (ojo: si se borra uno de estos a mano, vuelve a aparecer en el siguiente arranque).
-MERGE INTO concepto KEY (nombre, tipo, bolsa) VALUES
+-- Conceptos iniciales, solo si la tabla está vacía (si se cambian o borran a mano, no regresan).
+INSERT INTO concepto (nombre, tipo, bolsa)
+SELECT * FROM (VALUES
   ('Fondo de graduación',                            'INGRESO', 'GRUPO'),
   ('Cabina de fotos',                                'INGRESO', 'EVENTO'),
-  ('Artículos de venta en la patinada de Halloween', 'EGRESO',  'EVENTO');
+  ('Artículos de venta en la patinada de Halloween', 'EGRESO',  'EVENTO')
+) AS x(nombre, tipo, bolsa)
+WHERE NOT EXISTS (SELECT 1 FROM concepto);
 
 -- Ingreso: exactamente uno de niño (grupo) o evento. Gasto: nunca niño.
 ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS ck_nino_evento;
@@ -112,8 +115,9 @@ ALTER TABLE movimiento ADD CONSTRAINT ck_nino_evento CHECK (
 ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS ck_evento_sin_grupo;
 ALTER TABLE movimiento ADD CONSTRAINT ck_evento_sin_grupo CHECK (evento IS NULL OR grupo_id IS NULL);
 
+-- En cascada: si se corrige el nombre en la tabla evento, la BD lo cambia sola en los movimientos.
 ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS fk_evento;
-ALTER TABLE movimiento ADD CONSTRAINT fk_evento FOREIGN KEY (evento) REFERENCES evento(nombre);
+ALTER TABLE movimiento ADD CONSTRAINT fk_evento FOREIGN KEY (evento) REFERENCES evento(nombre) ON UPDATE CASCADE;
 
 -- ---------- Totales (solo movimientos no cancelados) ----------
 

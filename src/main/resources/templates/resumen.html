@@ -1,12 +1,32 @@
 <!-- Pestaña Consulta (pedazo que HTMX pone en #panel) -->
-<div class="card hero">
-  <h2>Fondo de graduación · disponible</h2>
+<!-- Dinero disponible: es todo el dinero que existe (grupos + eventos).
+     La barra muestra cuánto viene de cada lado; solo se pinta si los dos son positivos. -->
+<div class="card hero"
+     th:with="suma=${general.totalGrupos + general.totalEventos},
+              conBarra=${general.totalGrupos.signum() >= 0 and general.totalEventos.signum() >= 0 and suma.signum() > 0},
+              pctGrupos=${conBarra ? general.totalGrupos * 100 / suma : 0}">
+  <div class="hero-k">💰 Dinero disponible</div>
   <div class="big"><span th:replace="~{fragments :: money(${general.totalGeneral})}"></span></div>
-  <div class="stats">
-    <div class="stat"><div class="k">Total de los grupos</div>
-      <div class="v pos"><span th:replace="~{fragments :: money(${general.totalGrupos})}"></span></div></div>
-    <div class="stat"><div class="k">Total de eventos</div>
-      <div class="v pos"><span th:replace="~{fragments :: money(${general.totalEventos})}"></span></div></div>
+  <div class="hero-sub">Es todo el dinero del fondo de graduación</div>
+
+  <div class="hero-bar" th:if="${conBarra}" aria-hidden="true">
+    <span class="hb-grupos" th:style="|width:${#numbers.formatDecimal(pctGrupos, 1, 'NONE', 1, 'POINT')}%|"></span>
+    <span class="hb-eventos"></span>
+  </div>
+
+  <div class="hero-suma">
+    <div class="hs">
+      <span class="hs-k"><span class="dot hb-grupos"></span>Grupos A, B y C</span>
+      <span class="hs-v"><span th:replace="~{fragments :: money(${general.totalGrupos})}"></span></span>
+    </div>
+    <div class="hs">
+      <span class="hs-k"><span class="dot hb-eventos"></span>Eventos</span>
+      <span class="hs-v"><span class="hs-op">+</span><span th:replace="~{fragments :: money(${general.totalEventos})}"></span></span>
+    </div>
+    <div class="hs hs-total">
+      <span class="hs-k">Disponible</span>
+      <span class="hs-v"><span class="hs-op">=</span><span th:replace="~{fragments :: money(${general.totalGeneral})}"></span></span>
+    </div>
   </div>
 </div>
 
