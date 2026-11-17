@@ -63,7 +63,7 @@ select,input{font:inherit;color:var(--text);background:var(--card);border:1px so
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;font-size:14px;flex-wrap:wrap}
 
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;white-space:nowrap;color:var(--on-color)}
-.g-A{background:var(--gA)} .g-B{background:var(--gB)} .g-C{background:var(--gC)} .g-COMUN{background:var(--gX)} .g-EVENTO{background:var(--gE)}
+.g-A{background:var(--gA)} .g-B{background:var(--gB)} .g-C{background:var(--gC)} .g-COMUN{background:var(--gX)} .g-EVENTO{background:var(--gE)} .g-GRAD{background:var(--gG)}
 
 ul.movs{list-style:none;margin:0;padding:0}
 li.mov{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}

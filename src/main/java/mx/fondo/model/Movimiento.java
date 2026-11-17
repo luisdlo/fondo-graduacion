@@ -30,10 +30,13 @@ public record Movimiento(
     }
 
     public String grupoEtiqueta() {
+        if (graduacion) {
+            return "🎓 Graduación " + grupoId;
+        }
         return esEvento() ? "Eventos" : grupoId == null ? "Pago graduación" : grupoNombre;
     }
 
     public String pillClass() {
-        return "g-" + (esEvento() ? "EVENTO" : grupoId == null ? "COMUN" : grupoId);
+        return "g-" + (graduacion ? "GRAD" : esEvento() ? "EVENTO" : grupoId == null ? "COMUN" : grupoId);
     }
 }
