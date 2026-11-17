@@ -2,14 +2,14 @@
   --bg:#f5f6f8; --card:#ffffff; --text:#18212d; --muted:#667085; --line:#e3e6eb;
   --brand:#1f4fd8; --brand-soft:#e9effd;
   --in:#15803d; --out:#c0392b; --warn:#b45309; --warn-soft:#fdf3e2;
-  --gA:#1f4fd8; --gB:#c2570c; --gC:#7c3aed; --gX:#334155; --gE:#0f766e; --barE:#db2777; --on-color:#ffffff;
+  --gA:#1f4fd8; --gB:#c2570c; --gC:#7c3aed; --gX:#334155; --gE:#0f766e; --gG:#4d7c0f; --barE:#db2777; --on-color:#ffffff;
 }
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#0e1217; --card:#161b22; --text:#e6e9ee; --muted:#98a2b3; --line:#2a313b;
     --brand:#7ea0ff; --brand-soft:#1b2540;
     --in:#4ade80; --out:#f87171; --warn:#fbbf24; --warn-soft:#33260b;
-    --gA:#7ea0ff; --gB:#fb923c; --gC:#b794f6; --gX:#cbd5e1; --gE:#5eead4; --barE:#f472b6; --on-color:#0e1217;
+    --gA:#7ea0ff; --gB:#fb923c; --gC:#b794f6; --gX:#cbd5e1; --gE:#5eead4; --gG:#a3e635; --barE:#f472b6; --on-color:#0e1217;
   }
 }
 *{box-sizing:border-box}
@@ -219,7 +219,7 @@ footer{color:var(--muted);font-size:12px;margin:24px 0 8px;text-align:center}
 /* Selector de bolsa en formularios: dos tarjetas grandes (Alumno / Evento), pensadas para el dedo.
    El radio va escondido; la tarjeta elegida toma el color de su bolsa (--acc). */
 .pick-label{margin:0 0 -4px;font-size:13px;font-weight:600;color:var(--muted)}
-.bolsa-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bolsa-pick{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px}
 .bolsa-opt{position:relative;display:flex;flex-direction:column;gap:8px;padding:12px;min-height:96px;
   border:2px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;
   -webkit-tap-highlight-color:transparent;transition:border-color .15s, background .15s, transform .1s}

@@ -157,6 +157,7 @@ public class FondoController {
         model.addAttribute("hoy", LocalDate.now());
         model.addAttribute("conceptosGrupo", service.conceptos("EGRESO", "GRUPO"));
         model.addAttribute("conceptosEvento", service.conceptos("EGRESO", "EVENTO"));
+        model.addAttribute("conceptosGraduacion", service.conceptos("EGRESO", "GRADUACION"));
         model.addAttribute("eventos", service.eventos());
         return "egreso-form";
     }
@@ -171,8 +172,8 @@ public class FondoController {
                                   @RequestParam(required = false) MultipartFile comprobante,
                                   RedirectAttributes redirect) {
         try {
-            // Pagos de la graduación (fondo común) todavía no se capturan en pantalla
-            service.registrarEgreso(principal.getName(), false, "EVENTO".equals(bolsa) ? evento : null,
+            // GRUPO, EVENTO o GRADUACION; el fondo común (COMUN) todavía no se captura en pantalla
+            service.registrarEgreso(principal.getName(), "COMUN".equals(bolsa) ? "GRUPO" : bolsa, evento,
                     concepto, monto, fecha, comprobante);
             redirect.addFlashAttribute("ok", comprobante == null || comprobante.isEmpty()
                     ? "Gasto registrado sin comprobante." : "Gasto registrado.");

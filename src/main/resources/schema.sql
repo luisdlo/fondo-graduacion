@@ -20,8 +20,9 @@ CREATE TABLE IF NOT EXISTS nino (
   CONSTRAINT uq_nino_grupo UNIQUE (id, grupo_id)   -- permite validar que el niño sea del mismo grupo del movimiento
 );
 
--- Ingresos y gastos en una sola tabla. Tres bolsas:
+-- Ingresos y gastos en una sola tabla. Bolsas:
 --   grupo_id A/B/C                 = grupo (aportaciones por niño y gastos del grupo)
+--   grupo_id A/B/C + graduacion    = pagos de graduación del grupo (salón, playeras...; ver abajo)
 --   grupo_id NULL + evento         = Eventos (Halloween, patinada, rifas...; afecta a los tres grupos)
 --   grupo_id NULL + evento NULL    = pagos de la graduación (preparado, todavía no se usa en pantalla)
 -- Nunca se borra: se cancela con UPDATE (cancelado, motivo, cancelado_por).
@@ -119,15 +120,36 @@ ALTER TABLE movimiento ADD CONSTRAINT ck_evento_sin_grupo CHECK (evento IS NULL 
 ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS fk_evento;
 ALTER TABLE movimiento ADD CONSTRAINT fk_evento FOREIGN KEY (evento) REFERENCES evento(nombre) ON UPDATE CASCADE;
 
+-- Pagos de graduación (salón, playeras...): gasto de UN grupo, separado de los gastos de Alumno.
+-- El dinero sale de lo que juntó ese grupo; solo le resta a él.
+ALTER TABLE movimiento ADD COLUMN IF NOT EXISTS graduacion BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE movimiento DROP CONSTRAINT IF EXISTS ck_graduacion;
+ALTER TABLE movimiento ADD CONSTRAINT ck_graduacion CHECK (
+  graduacion = FALSE OR (tipo = 'EGRESO' AND grupo_id IS NOT NULL AND evento IS NULL));
+
+-- Catálogo de conceptos con la bolsa GRADUACION (la columna era VARCHAR(6))
+ALTER TABLE concepto ALTER COLUMN bolsa SET DATA TYPE VARCHAR(10);
+ALTER TABLE concepto DROP CONSTRAINT IF EXISTS ck_concepto_bolsa;
+ALTER TABLE concepto ADD CONSTRAINT ck_concepto_bolsa CHECK (bolsa IN ('GRUPO', 'EVENTO', 'GRADUACION', 'COMUN'));
+
+-- Conceptos iniciales de graduación, solo si todavía no hay ninguno
+INSERT INTO concepto (nombre, tipo, bolsa)
+SELECT * FROM (VALUES
+  ('Playeras', 'EGRESO', 'GRADUACION'),
+  ('Salón',    'EGRESO', 'GRADUACION')
+) AS x(nombre, tipo, bolsa)
+WHERE NOT EXISTS (SELECT 1 FROM concepto WHERE bolsa = 'GRADUACION');
+
 -- ---------- Totales (solo movimientos no cancelados) ----------
 
--- Total por grupo: lo que juntó menos lo que gastó
+-- Total por grupo: lo que juntó menos sus gastos y sus pagos de graduación
 CREATE OR REPLACE VIEW v_total_grupo AS
 SELECT g.id AS grupo_id,
        g.nombre,
        g.vocal,
        COALESCE(SUM(CASE WHEN m.tipo = 'INGRESO' THEN m.monto END), 0) AS ingresos,
-       COALESCE(SUM(CASE WHEN m.tipo = 'EGRESO'  THEN m.monto END), 0) AS gastos,
+       COALESCE(SUM(CASE WHEN m.tipo = 'EGRESO' AND m.graduacion = FALSE THEN m.monto END), 0) AS gastos,
+       COALESCE(SUM(CASE WHEN m.tipo = 'EGRESO' AND m.graduacion = TRUE  THEN m.monto END), 0) AS graduacion,
        COALESCE(SUM(CASE WHEN m.tipo = 'INGRESO' THEN m.monto ELSE -m.monto END), 0) AS total
 FROM grupo g
 LEFT JOIN movimiento m ON m.grupo_id = g.id AND m.cancelado = FALSE

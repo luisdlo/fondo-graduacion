@@ -16,6 +16,7 @@ public record Movimiento(
         LocalDate fecha,
         String registradoPor,
         String comprobante,
+        boolean graduacion,       // pago de graduación del grupo (salón, playeras...)
         boolean cancelado,
         String motivoCancelacion,
         String canceladoPor) {

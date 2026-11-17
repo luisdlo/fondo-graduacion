@@ -7,9 +7,8 @@
   <form class="form" th:action="@{/egresos}" method="post" enctype="multipart/form-data">
     <p class="pick-label">¿De dónde sale el gasto?</p>
     <div class="bolsa-pick" role="radiogroup" aria-label="¿De dónde sale el gasto?"
-         onchange="const ev = this.querySelector('input:checked').value === 'EVENTO';
-                   const f = this.closest('form'); f.querySelector('#egr-grupo').disabled = f.querySelector('#egr-grupo').hidden = ev;
-                   f.querySelector('#egr-evento').disabled = f.querySelector('#egr-evento').hidden = !ev;">
+         onchange="const b = this.querySelector('input:checked').value;
+                   this.closest('form').querySelectorAll('fieldset.bolsa').forEach(fs => fs.disabled = fs.hidden = fs.dataset.bolsa !== b);">
       <label class="bolsa-opt" th:style="|--acc:var(--g${vocal.grupoId})|">
         <input type="radio" name="bolsa" value="GRUPO" checked>
         <span class="bolsa-ico" aria-hidden="true">🎒</span>
@@ -20,9 +19,14 @@
         <span class="bolsa-ico" aria-hidden="true">🎉</span>
         <span class="bolsa-txt"><strong>Evento</strong></span>
       </label>
+      <label class="bolsa-opt" style="--acc:var(--gG)">
+        <input type="radio" name="bolsa" value="GRADUACION">
+        <span class="bolsa-ico" aria-hidden="true">🎓</span>
+        <span class="bolsa-txt"><strong>Graduación</strong><small th:text="|Pagos del ${vocal.grupoNombre}|">Pagos del Grupo A</small></span>
+      </label>
     </div>
 
-    <fieldset id="egr-grupo" class="bolsa">
+    <fieldset id="egr-grupo" class="bolsa" data-bolsa="GRUPO">
       <label class="field">Concepto
         <select name="concepto" required data-tipo="EGRESO" data-bolsa="GRUPO" onchange="conceptoCambio(this)">
           <option value="">— Elige el concepto —</option>
@@ -32,7 +36,7 @@
       </label>
     </fieldset>
 
-    <fieldset id="egr-evento" class="bolsa" hidden disabled>
+    <fieldset id="egr-evento" class="bolsa" data-bolsa="EVENTO" hidden disabled>
       <label class="field">Evento
         <select name="evento" required>
           <option value="">— Elige el evento —</option>
@@ -43,6 +47,16 @@
         <select name="concepto" required data-tipo="EGRESO" data-bolsa="EVENTO" onchange="conceptoCambio(this)">
           <option value="">— Elige el concepto —</option>
           <option th:each="c : ${conceptosEvento}" th:value="${c}" th:text="${c}">Compra de juguetes</option>
+          <option value="__nuevo">＋ Agregar nuevo concepto…</option>
+        </select>
+      </label>
+    </fieldset>
+
+    <fieldset id="egr-graduacion" class="bolsa" data-bolsa="GRADUACION" hidden disabled>
+      <label class="field">Concepto
+        <select name="concepto" required data-tipo="EGRESO" data-bolsa="GRADUACION" onchange="conceptoCambio(this)">
+          <option value="">— Elige el concepto —</option>
+          <option th:each="c : ${conceptosGraduacion}" th:value="${c}" th:text="${c}">Salón</option>
           <option value="__nuevo">＋ Agregar nuevo concepto…</option>
         </select>
       </label>

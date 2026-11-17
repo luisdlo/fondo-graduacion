@@ -29,7 +29,7 @@ public class FondoRepository {
 
     private static final String SELECT_MOVIMIENTOS = """
             SELECT m.id, m.tipo, m.grupo_id, g.nombre AS grupo_nombre, n.nombre AS nino, m.evento,
-                   m.concepto, m.monto, m.fecha, m.registrado_por, m.comprobante,
+                   m.concepto, m.monto, m.fecha, m.registrado_por, m.comprobante, m.graduacion,
                    m.cancelado, m.motivo_cancelacion, m.cancelado_por
               FROM movimiento m
               LEFT JOIN grupo g ON g.id = m.grupo_id
@@ -66,7 +66,7 @@ public class FondoRepository {
     /**
      * Conceptos del catálogo para un tipo y una bolsa.
      * @param tipo  INGRESO o EGRESO
-     * @param bolsa GRUPO, EVENTO o COMUN
+     * @param bolsa GRUPO, EVENTO, GRADUACION o COMUN
      */
     public List<String> conceptos(String tipo, String bolsa) {
         return jdbc.queryForList("SELECT nombre FROM concepto WHERE tipo = ? AND bolsa = ? ORDER BY nombre",
@@ -85,7 +85,8 @@ public class FondoRepository {
 
     /**
      * @param tipo              INGRESO, EGRESO o null para ambos
-     * @param grupo             A, B, C, EVENTOS, COMUN (pagos de la graduación) o null para todos
+     * @param grupo             A, B, C, EVENTOS, GRADUACION (pagos de graduación de los grupos),
+     *                          COMUN (fondo común) o null para todos
      * @param evento            nombre del evento o null para todos
      * @param incluirCancelados si false, oculta los cancelados
      * @param limite            máximo de renglones o null para todos
@@ -100,6 +101,8 @@ public class FondoRepository {
         }
         if ("EVENTOS".equals(grupo)) {
             sql.append(" AND m.evento IS NOT NULL");
+        } else if ("GRADUACION".equals(grupo)) {
+            sql.append(" AND m.graduacion = TRUE");
         } else if ("COMUN".equals(grupo)) {
             sql.append(" AND m.grupo_id IS NULL AND m.evento IS NULL");
         } else if (grupo != null) {
@@ -147,11 +150,13 @@ public class FondoRepository {
     }
 
     public void insertarMovimiento(String tipo, String grupoId, Integer ninoId, String evento, String concepto,
-                                   BigDecimal monto, LocalDate fecha, String registradoPor, String comprobante) {
+                                   BigDecimal monto, LocalDate fecha, String registradoPor, String comprobante,
+                                   boolean graduacion) {
         jdbc.update("""
-                INSERT INTO movimiento (tipo, grupo_id, nino_id, evento, concepto, monto, fecha, registrado_por, comprobante)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, tipo, grupoId, ninoId, evento, concepto, monto, fecha, registradoPor, comprobante);
+                INSERT INTO movimiento (tipo, grupo_id, nino_id, evento, concepto, monto, fecha, registrado_por,
+                                        comprobante, graduacion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, tipo, grupoId, ninoId, evento, concepto, monto, fecha, registradoPor, comprobante, graduacion);
     }
 
     public Optional<Movimiento> movimientoPorId(int id) {
