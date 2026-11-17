@@ -121,7 +121,7 @@
     f.tipo.value = sel.dataset.tipo;
     f.bolsa.value = sel.dataset.bolsa;
     document.getElementById('concepto-desc').textContent =
-      (sel.dataset.tipo === 'INGRESO' ? 'Ingreso' : 'Gasto') + ' · ' + (sel.dataset.bolsa === 'EVENTO' ? 'Evento' : 'Alumno');
+      (sel.dataset.tipo === 'INGRESO' ? 'Ingreso' : 'Gasto') + ' · ' + ({ EVENTO: 'Evento', GRADUACION: 'Graduación' }[sel.dataset.bolsa] || 'Alumno');
     document.getElementById('concepto-error').hidden = true;
     document.getElementById('modal-concepto').classList.add('open');
     setTimeout(() => f.nombre.focus(), 50);

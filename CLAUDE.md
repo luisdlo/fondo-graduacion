@@ -69,13 +69,16 @@ db/datos-ejemplo.sql         ← datos de prueba; se corre UNA vez a mano en la 
   Un vocal por grupo; el login vive aquí (no hay tabla de usuarios).
 - **nino**: `id`, `nombre`, `grupo_id`.
 - **evento** (`nombre` PK): catálogo de eventos (Halloween, Patinada, Rifa 1…). Se da de alta a mano en la BD.
-- **concepto** (`nombre`, `tipo` INGRESO|EGRESO, `bolsa` GRUPO|EVENTO|COMUN): catálogo de conceptos.
+- **concepto** (`nombre`, `tipo` INGRESO|EGRESO, `bolsa` GRUPO|EVENTO|GRADUACION|COMUN): catálogo de conceptos.
   Cada combo de los formularios muestra solo los de su tipo y bolsa, y trae la opción
   "Agregar nuevo concepto…" (popup → `POST /registro/concepto`, cualquier vocal).
 - **movimiento**: ingresos y gastos en una sola tabla. Tres **bolsas**:
   - **Grupo**: `grupo_id` A/B/C, `evento` NULL (aportaciones por niño y gastos del grupo)
   - **Eventos**: `grupo_id` NULL + `evento` (FK a `evento`). Es de los tres grupos (CHECK `ck_evento_sin_grupo`)
-  - **Pagos de la graduación**: `grupo_id` NULL + `evento` NULL. Preparado en BD/vistas, **no se muestra en pantalla**
+  - **Graduación** (pagos de graduación: salón, playeras…): `grupo_id` A/B/C + `graduacion = TRUE`. Solo gastos
+    (CHECK `ck_graduacion`); cada grupo paga lo que decide y solo le resta a él. El dinero sale de lo que
+    juntó el grupo. En `v_total_grupo` va en la columna `graduacion` (aparte de `gastos`)
+  - **Fondo común**: `grupo_id` NULL + `evento` NULL. Preparado en BD/vistas, **no se muestra en pantalla**
   - `tipo`: `INGRESO` | `EGRESO`
   - `nino_id`: solo para ingresos de grupo, debe ser del mismo grupo (FK compuesta).
     Todo ingreso lleva **exactamente uno** de `nino_id` o `evento` (CHECK `ck_nino_evento`)
@@ -96,10 +99,11 @@ ni datos ahí. Para cambiar un CHECK: `DROP CONSTRAINT IF EXISTS` + `ADD CONSTRA
 3. **Ingresos**: el vocal elige *Alumno* (niño de su grupo, suma a su grupo) o *Evento*
    (sin niño, suma a la bolsa Eventos). Concepto del catálogo. Monto: $500, $1,000 (`FondoService.MONTOS`)
    u "otra cantidad" > 0. Fecha = hoy.
-4. **Gastos**: *Alumno* (del grupo del vocal) o *Evento*. Concepto del catálogo, monto > 0, fecha,
+4. **Gastos**: *Alumno* (del grupo del vocal), *Evento* o *Graduación* (del grupo del vocal). Concepto del catálogo, monto > 0, fecha,
    comprobante opcional (PDF o foto).
-5. **Totales**: total por grupo = ingresos − gastos del grupo; total por evento igual.
-   Total general = grupos + eventos − pagos de la graduación.
+5. **Totales**: total por grupo = ingresos − gastos − pagos de graduación del grupo;
+   total por evento = ingresos − gastos.
+   Total general = grupos + eventos − fondo común.
 6. **Eventos**: cualquier vocal registra y borra movimientos de eventos.
 7. **Nada se borra**: un movimiento se cancela (`cancelado = TRUE` + motivo + quién). Nunca `DELETE`.
 8. Cómo se reparte el costo entre grupos **no es tema del sistema**: solo registra y suma.

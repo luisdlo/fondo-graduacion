@@ -64,7 +64,7 @@ public class FondoService {
     }
 
     /**
-     * Cualquier vocal agrega un concepto desde el combo del formulario (bolsa GRUPO o EVENTO).
+     * Cualquier vocal agrega un concepto desde el combo del formulario (bolsa GRUPO, EVENTO o GRADUACION).
      * Regresa el nombre como quedó guardado para seleccionarlo en el combo.
      */
     public String agregarConcepto(String nombre, String tipo, String bolsa) {
@@ -75,7 +75,7 @@ public class FondoService {
         if (limpio.length() > 150) {
             throw new IllegalArgumentException("El concepto es muy largo (máximo 150 letras).");
         }
-        if (tipo == null || !TIPOS.contains(tipo) || !("GRUPO".equals(bolsa) || "EVENTO".equals(bolsa))) {
+        if (tipo == null || !TIPOS.contains(tipo) || !("GRUPO".equals(bolsa) || "EVENTO".equals(bolsa) || "GRADUACION".equals(bolsa))) {
             throw new IllegalArgumentException("No se pudo agregar el concepto.");
         }
         repository.agregarConcepto(limpio, tipo, bolsa);
@@ -130,23 +130,20 @@ public class FondoService {
             throw new IllegalArgumentException("El monto debe ser mayor a cero.");
         }
         repository.insertarMovimiento("INGRESO", esEvento ? null : vocal.grupoId(), ninoId, evento, concepto,
-                monto, LocalDate.now(), vocal.nombre(), null);
+                monto, LocalDate.now(), vocal.nombre(), null, false);
     }
 
     /**
-     * Gasto del grupo del vocal, de un evento (cualquier vocal) o pago de la graduación
-     * (fondoComun; preparado, todavía no se usa en pantalla).
+     * Gasto según la bolsa: GRUPO (Alumno, del grupo del vocal), GRADUACION (pago de graduación del
+     * grupo del vocal), EVENTO (cualquier vocal) o COMUN (fondo común; preparado, no se usa en pantalla).
      */
-    public void registrarEgreso(String usuario, boolean fondoComun, String evento, String concepto, BigDecimal monto,
+    public void registrarEgreso(String usuario, String bolsa, String evento, String concepto, BigDecimal monto,
                                 LocalDate fecha, MultipartFile comprobante) throws IOException {
         Vocal vocal = vocal(usuario);
-        String bolsa;
-        if (fondoComun) {
-            bolsa = "COMUN";
-            evento = null;
-        } else if (evento != null && !evento.isBlank()) {
-            bolsa = "EVENTO";
+        if ("EVENTO".equals(bolsa)) {
             validarEvento(evento);
+        } else if ("GRADUACION".equals(bolsa) || "COMUN".equals(bolsa)) {
+            evento = null;
         } else {
             bolsa = "GRUPO";
             evento = null;
@@ -156,8 +153,10 @@ public class FondoService {
             throw new IllegalArgumentException("El monto debe ser mayor a cero.");
         }
         String archivo = guardarComprobante(comprobante);
-        repository.insertarMovimiento("EGRESO", "GRUPO".equals(bolsa) ? vocal.grupoId() : null, null, evento,
-                concepto, monto, fecha != null ? fecha : LocalDate.now(), vocal.nombre(), archivo);
+        boolean graduacion = "GRADUACION".equals(bolsa);
+        String grupoId = "GRUPO".equals(bolsa) || graduacion ? vocal.grupoId() : null;
+        repository.insertarMovimiento("EGRESO", grupoId, null, evento, concepto, monto,
+                fecha != null ? fecha : LocalDate.now(), vocal.nombre(), archivo, graduacion);
     }
 
     private void validarEvento(String evento) {

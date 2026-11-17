@@ -46,6 +46,8 @@
       <span class="pos"><span th:replace="~{fragments :: money(${g.ingresos})}"></span></span></div>
     <div class="row"><span class="muted">Gastos del grupo</span>
       <span class="neg"><span th:replace="~{fragments :: money(${g.gastos})}"></span></span></div>
+    <div class="row"><span class="muted">🎓 Pagos de graduación</span>
+      <span class="neg"><span th:replace="~{fragments :: money(${g.graduacion})}"></span></span></div>
     <div class="row"><strong>Aporta al fondo</strong>
       <strong><span th:replace="~{fragments :: money(${g.total})}"></span></strong></div>
     <div class="go" th:if="${logueado}">Ver movimientos →</div>
